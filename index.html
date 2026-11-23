@@ -11,6 +11,7 @@
   Supabase, atrás do login. Pacote: scripts/pacote-online.py. Banco: online/schema.sql.
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script>
 /* ===== CONFIGURAÇÃO. Vazio = modo local (teste no computador, sem login) ===== */
 const SB_URL = "https://bjxjgijhgkwcjcyeewtu.supabase.co";
@@ -88,13 +89,14 @@ table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
   <span class="pill" id="p-sync" style="display:none"></span>
   <span class="esp"></span>
   <span class="small" id="p-quem" style="color:#dbeafe"></span>
+  <button id="bt-ppt" style="display:none" title="Gera o PowerPoint do comitê com os números e os lançamentos de hoje">Exportar PPT</button>
   <label class="bt" id="bt-pacote" style="display:none" title="Só para o dono: o pacote gerado pela rotina da manhã">Carregar pacote do dia<input type="file" id="in-pacote" accept=".json" hidden></label>
   <button id="bt-sair" style="display:none">Sair</button>
 </div>
 <div class="abas">
   <button class="aba on" data-aba="geral">Geral</button>
   <button class="aba" data-aba="processo">Por processo</button>
-  <button class="aba" data-aba="resumo">Lançamentos do dia</button>
+  <button class="aba" data-aba="resumo">Lançamentos do dia e PPT</button>
 </div>
 <div class="palco">
   <div class="vazio" id="vazio">Carregando…</div>
@@ -224,6 +226,7 @@ async function aplicaPacote(p){
   carregaFrame("#fr-geral", g);
   carregaFrame("#fr-processo", pr);
   $("#vazio").style.display = "none";
+  $("#bt-ppt").style.display = "";
   mostra(abaAtual);
 }
 function carregaFrame(sel, html){
@@ -258,6 +261,28 @@ const CSS_FRAME = `
   .ol-bt:hover{background:#0b1f3a;color:#fff}
   tr.ol-tem > td:first-child{box-shadow:inset 4px 0 0 #0f766e}
   .ol-res{display:block;margin-top:5px;font-size:11.5px;color:#0f766e;background:#ecfdf5;border-radius:6px;padding:4px 7px;white-space:pre-wrap}
+  /* celular: pedido do Bruno/Renato, 23/11 */
+  @media (max-width:760px){
+    .wrap{padding:10px 8px 40px!important}
+    header{padding:16px!important;border-radius:12px!important}
+    h1{font-size:20px!important}
+    h2{font-size:16px!important}
+    .meta .pill{font-size:11px}
+    .grid,.kpis,.kpis10{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+    .kpi .v{font-size:22px!important}
+    .st{flex-direction:column;align-items:flex-start!important}
+    .card{padding:10px!important}
+    .tbwrap,.card:has(table){overflow-x:auto;-webkit-overflow-scrolling:touch}
+    table{min-width:720px}
+    .filtros{gap:10px!important}
+    .chip{padding:5px 9px!important;font-size:11px!important}
+    .psel{max-width:100%!important}
+    .tabs{overflow-x:auto}
+    .priority{flex-wrap:wrap}
+    .frente-row{grid-template-columns:1fr!important}
+    .frow{font-size:12px}
+    footer{font-size:11px}
+  }
 `;
 function realca(fr){
   const doc = fr.contentDocument; if (!doc) return;
@@ -293,7 +318,13 @@ function resumoLinha(l){
   if (d.pct) p.push("% → " + d.pct);
   return p.join(" · ") + "  — " + (d.nome_autor || l.autor) + ", " + hora(l.atualizado_em);
 }
-function remarcaTudo(){ marcaFrame($("#fr-geral")); marcaFrame($("#fr-processo")); if (abaAtual==="resumo") desenhaResumo(); if (atAberta) desenhaOutros(atAberta); }
+function remarcaTudo(){
+  marcaFrame($("#fr-geral")); marcaFrame($("#fr-processo"));
+  // não redesenha a aba enquanto alguém digita nela (senão o texto some)
+  const digitando = document.activeElement && $("#resumo").contains(document.activeElement);
+  if (abaAtual==="resumo" && !digitando) desenhaResumo();
+  if (atAberta) desenhaOutros(atAberta);
+}
 
 /* ---------- painel ---------- */
 $("#f-pref").innerHTML = '<option value="">— sem justificativa —</option>' + PREFIXOS.map(p => `<option>${esc(p)}</option>`).join("");
@@ -377,8 +408,255 @@ function desenhaResumo(){
     return `<tr class="cl" data-at="${esc(d.at)}"><td><b>${esc(d.at)}</b></td><td>${esc(d.nome)}<div class="small">${esc(d.proc)}</div></td><td style="white-space:pre-wrap">${esc(resumoLinha(l).replace(/  — .*$/,""))}</td><td class="small">${esc(d.nome_autor||l.autor)}<br>${esc(hora(l.atualizado_em))}</td><td>${tg}${mon && mon.obs ? '<div class="small">'+esc(mon.obs)+'</div>' : ''}</td></tr>`;
   }).join("") || `<tr><td colspan="5" class="small">Nenhum lançamento ainda hoje.</td></tr>`;
   h += `</tbody></table></div>`;
+  h += htmlFechamento();
   $("#resumo").innerHTML = h;
   $("#resumo").querySelectorAll("tr.cl").forEach(tr => tr.onclick = () => abre(tr.dataset.at));
+  ligaFechamento();
+}
+
+/* ---------- régua do PMO (planilha CONTRASTE_main) sobre o pacote ----------
+   Total: FT 06b sem Cancelado e Fora do Programa. Vencida: não concluída com
+   fim da baseline até a referência, inclusive; Bloqueadas à parte. Início
+   atrasado: Não Iniciado, início da baseline até a referência e fim depois.
+   %Esp: (ref-1 - início)/(fim - início), limitado a 0..1. */
+const FORA = new Set(["Cancelado","Fora do Programa"]);
+const d8 = s => s ? new Date(s + "T00:00:00") : null;
+const dias = (a, b) => Math.round((a - b) / 86400000);
+const ehAltoCrit = a => /^(Alto|Crítico)/.test(a.imp || "");
+function regua(){
+  const R = d8(pac.ref);
+  const base = [...ativ.values()].filter(a => !FORA.has(a.st));
+  const ab = base.filter(a => a.st !== "Concluído");
+  const venT = ab.filter(a => a.bf && d8(a.bf) <= R).map(a => ({...a, atraso: dias(R, d8(a.bf))}));
+  const ven = venT.filter(a => a.st !== "Bloqueado").sort((x,y) => y.atraso - x.atraso);
+  const blo = venT.filter(a => a.st === "Bloqueado").sort((x,y) => y.atraso - x.atraso);
+  const ini = base.filter(a => a.st === "Não Iniciado" && a.bi && a.bf && d8(a.bi) <= R && d8(a.bf) > R)
+                  .map(a => ({...a, atraso: dias(R, d8(a.bi))})).sort((x,y) => y.atraso - x.atraso);
+  let se = 0, sr = 0, n = 0;
+  base.forEach(a => {
+    const s = d8(a.bi), e = d8(a.bf); if (!s || !e || e <= s) return;
+    const sh = dias(R, s) - 1, sf = dias(e, s);
+    se += sh > sf ? 1 : (sh < 0 ? 0 : sh / sf);
+    sr += (parseFloat(String(a.pr || "0").replace("%","")) || 0) / 100; n++;
+  });
+  return { R, base, ab, ven, blo, ini, esp: n ? 100*se/n : 0, rea: n ? 100*sr/n : 0 };
+}
+// justificativa vigente: a lançada hoje no site (mais recente) ou a que já está no Monday
+function justDe(a){
+  const ls = lancDe(a.at).filter(l => l.dados.prefixo).sort((x,y) => (y.atualizado_em||"").localeCompare(x.atualizado_em||""));
+  if (ls.length){ const d = ls[0].dados; return d.prefixo + ((d.justificativa||"").trim() ? " - " + d.justificativa.trim() : ""); }
+  return a.just || "";
+}
+// notas manuais do fechamento (por processo e leitura geral): vale a mais recente
+function notaDe(tipo, chave){
+  const ls = [...lanc.values()].filter(l => l.dados.tipo === tipo && l.dados.ref === pac.ref && l.dados.chave === chave)
+               .sort((x,y) => (y.atualizado_em||"").localeCompare(x.atualizado_em||""));
+  return ls.length ? ls[0] : null;
+}
+function processosVencidos(rg){
+  const m = new Map();
+  rg.ven.concat(rg.blo).forEach(a => { const k = a.proc || "(sem processo)"; m.set(k, (m.get(k)||0) + 1); });
+  return [...m.entries()].sort((x,y) => y[1] - x[1]).map(x => x[0]);
+}
+function htmlFechamento(){
+  const rg = regua();
+  const procs = processosVencidos(rg);
+  const gl = notaDe("g", "leitura");
+  let h = `<div class="card"><h2>Fechamento para o PPT</h2>
+    <div class="small">Régua do PMO, export de ${esc(pac.lido||dbr(pac.ref))}: <b>${rg.base.length}</b> atividades · <b>${rg.ven.length}</b> vencidas (+${rg.blo.length} bloqueadas à parte) · <b>${rg.ini.length}</b> inícios atrasados · esperado ${rg.esp.toFixed(1).replace(".",",")}% × realizado ${rg.rea.toFixed(1).replace(".",",")}%.
+    Os números e as tabelas saem prontos. O que não dá para calcular, a gestão escreve aqui e vai para o slide.</div>
+    <div class="campo"><label>Leitura executiva (rodapé dos slides)</label>
+      <textarea data-nota="g" data-chave="leitura" placeholder="Ex.: pactuar responsáveis e novas datas para as vencidas de Alto/Crítico.">${esc(gl ? gl.dados.texto : "")}</textarea>
+      <div class="small">${gl ? "Última edição: " + esc(gl.dados.nome_autor || gl.autor) + ", " + esc(hora(gl.atualizado_em)) : ""}</div></div>
+    <button class="pri" id="bt-ppt2" type="button">Exportar PPT</button> <span class="small" id="ppt-msg"></span></div>`;
+  h += `<div class="card"><h2>Diagnóstico por processo com vencidas</h2><table class="ls"><thead><tr><th style="width:22%">Processo</th><th>Diagnóstico (problema, risco e solução)</th><th style="width:30%">O que destrava</th><th></th></tr></thead><tbody>`;
+  h += procs.map(p => {
+    const nt = notaDe("p", p), d = nt ? nt.dados : {};
+    const nv = rg.ven.filter(a => (a.proc||"(sem processo)") === p).length, nb = rg.blo.filter(a => (a.proc||"(sem processo)") === p).length;
+    return `<tr><td><b>${esc(p)}</b><div class="small">${nv} vencida(s)${nb ? " + " + nb + " bloqueada(s)" : ""}</div></td>
+      <td><textarea data-nota="p" data-chave="${esc(p)}" data-campo="diag" rows="2" style="width:100%">${esc(d.diag||"")}</textarea></td>
+      <td><textarea data-nota="p" data-chave="${esc(p)}" data-campo="destrava" rows="2" style="width:100%">${esc(d.destrava||"")}</textarea></td>
+      <td class="small">${nt ? esc(d.nome_autor || nt.autor) + "<br>" + esc(hora(nt.atualizado_em)) : ""}</td></tr>`;
+  }).join("");
+  h += `</tbody></table><div class="small" style="margin-top:6px">Salva sozinho ao sair do campo. Vale a última versão de cada processo, de quem editou por último.</div></div>`;
+  return h;
+}
+function ligaFechamento(){
+  const b = $("#bt-ppt2"); if (b) b.onclick = gerarPPT;
+  $("#resumo").querySelectorAll("textarea[data-nota]").forEach(t => t.addEventListener("change", () => salvaNota(t)));
+}
+async function salvaNota(t){
+  const tipo = t.dataset.nota, chave = t.dataset.chave;
+  const atual = notaDe(tipo, chave);
+  const dados = Object.assign({}, atual ? atual.dados : {}, { tipo, ref: pac.ref, chave, nome_autor: nomeAutor() });
+  if (tipo === "g") dados.texto = t.value.trim();
+  else {
+    $("#resumo").querySelectorAll(`textarea[data-nota="p"]`).forEach(o => { if (o.dataset.chave === chave) dados[o.dataset.campo] = o.value.trim(); });
+  }
+  const id = tipo + "|" + pac.ref + "|" + chave + "|" + eu, agora = new Date().toISOString();
+  try{
+    if (CLOUD){
+      const { data, error } = await sb.from("lancamentos").upsert({ id, dados, autor: eu, atualizado_em: agora }).select().single();
+      if (error) throw error; lanc.set(id, data);
+    } else {
+      lanc.set(id, { id, dados, autor: eu, atualizado_em: agora });
+      try{ localStorage.setItem(LOCAL_LANC, JSON.stringify([...lanc.values()])); }catch(x){}
+    }
+    t.style.borderColor = "#10b981";
+  }catch(err){ console.error(err); t.style.borderColor = "#dc2626"; alert("Não salvou: " + (err.message||err)); }
+}
+
+/* ---------- PowerPoint no layout do Painel Executivo do comitê ---------- */
+$("#bt-ppt").onclick = gerarPPT;
+async function gerarPPT(){
+  if (!pac){ alert("Carregue o pacote do dia primeiro."); return; }
+  if (!window.PptxGenJS){ alert("Não carregou a biblioteca do PowerPoint (internet bloqueada?)."); return; }
+  const msg = $("#ppt-msg"); if (msg) msg.textContent = "gerando…";
+  try{ await montaPPT(); if (msg) msg.textContent = "✓ baixado"; }
+  catch(err){ console.error(err); alert("Não gerou o PPT: " + (err.message||err)); if (msg) msg.textContent = ""; }
+}
+async function montaPPT(){
+  const rg = regua(), refBR = dbr(pac.ref);
+  const C = { navy:"0B2545", teal:"12708F", head:"0A4A68", red:"D7263D", ora:"E8771A", yel:"F2B705", grn:"5FA02D", gry:"64748B", lt:"EEF2F6", txt:"1E293B" };
+  const F = "Segoe UI";
+  const pct = (x, t) => t ? (100*x/t).toFixed(1).replace(".",",") + "%" : "0%";
+  const corImp = i => /^Crítico/.test(i) ? "7B0D1E" : i === "Alto" ? "C00000" : i === "Médio" ? "F2B705" : i === "Baixo" ? "00A04A" : "94A3B8";
+  const leitura = (notaDe("g","leitura")||{dados:{}}).dados.texto || "";
+  const p = new PptxGenJS(); p.layout = "LAYOUT_WIDE"; p.title = "Painel Executivo — FT 06b Logística — " + refBR;
+  const rod = s => s.addText("Programa de Integração  |  Comitê Executivo  ·  régua do PMO  ·  export " + (pac.lido||refBR), { x:7.3, y:7.05, w:5.8, h:0.3, fontFace:F, fontSize:9, color:C.teal, align:"right" });
+  const titulo = (s, t, sub) => {
+    s.addShape(p.ShapeType.rect, { x:0, y:0, w:13.33, h:0.12, fill:{ color:C.head } });
+    s.addText(t, { x:0.4, y:0.25, w:12.5, h:0.6, fontFace:F, fontSize:24, bold:true, color:C.teal });
+    if (sub) s.addText(sub, { x:0.4, y:0.82, w:12.5, h:0.35, fontFace:F, fontSize:12, color:C.gry });
+  };
+  const kpi = (s, x, y, w, v, l, cor) => {
+    s.addShape(p.ShapeType.rect, { x, y, w, h:0.95, fill:{ color:"FFFFFF" }, line:{ color:"D5DCE4", width:0.75 } });
+    s.addText(String(v), { x:x+0.1, y:y+0.05, w:w-0.2, h:0.5, fontFace:F, fontSize:24, bold:true, color:cor||C.navy });
+    s.addText(l, { x:x+0.1, y:y+0.55, w:w-0.2, h:0.35, fontFace:F, fontSize:10, color:C.gry });
+  };
+  const H = (t, o) => ({ text:t, options:Object.assign({ bold:true, color:"FFFFFF", fill:{ color:C.head }, fontFace:F, fontSize:10, align:"center", valign:"middle" }, o||{}) });
+  const T = (t, o) => ({ text:String(t ?? ""), options:Object.assign({ fontFace:F, fontSize:9, color:C.txt, valign:"middle" }, o||{}) });
+
+  // 1. capa
+  let s = p.addSlide(); s.background = { color:C.navy };
+  s.addShape(p.ShapeType.rect, { x:0, y:5.9, w:13.33, h:0.08, fill:{ color:C.teal } });
+  s.addText("Comitê Executivo", { x:0.8, y:2.1, w:11, h:0.8, fontFace:F, fontSize:36, bold:true, color:"FFFFFF" });
+  s.addText("FT 06b - Logística", { x:0.8, y:2.9, w:11, h:0.6, fontFace:F, fontSize:24, color:"BFE3EE" });
+  s.addText("Painel Executivo", { x:0.8, y:3.5, w:11, h:0.5, fontFace:F, fontSize:18, color:"BFE3EE" });
+  s.addText(refBR, { x:0.8, y:4.3, w:11, h:0.5, fontFace:F, fontSize:16, color:"FFFFFF" });
+
+  // 2. panorama executivo
+  const tot = rg.base.length, co = rg.base.filter(a => a.st==="Concluído").length, ea = rg.base.filter(a => a.st==="Em Andamento").length;
+  const ni = rg.base.filter(a => a.st==="Não Iniciado").length, nProc = new Set(rg.base.map(a => a.proc)).size;
+  s = p.addSlide();
+  titulo(s, "PANORAMA EXECUTIVO | LOGÍSTICA", `Execução com ${pct(co,tot)} concluído (${co} de ${tot} atividades); ${rg.ven.length} vencidas (bloqueadas fora do cálculo) e ${rg.ini.length} inícios atrasados.`);
+  kpi(s, 0.4, 1.3, 2.35, tot, "Atividades da FT · " + nProc + " processos");
+  kpi(s, 2.9, 1.3, 2.35, co + " · " + pct(co,tot), "Concluídas", C.grn);
+  kpi(s, 5.4, 1.3, 2.35, ea + " · " + pct(ea,tot), "Em andamento", C.ora);
+  kpi(s, 7.9, 1.3, 2.35, ni + " · " + pct(ni,tot), "Não iniciadas", C.gry);
+  kpi(s, 10.4, 1.3, 2.5, rg.ven.length, "Vencidas (baseline) · +" + rg.blo.length + " bloqueadas à parte", C.red);
+  const jan = a => a.fase === "Pré-Closing" ? "Pré-Closing" : !(a.bf||a.cf) ? "Sem data-fim" : ((a.bf||a.cf) <= "2026-12-31" ? "Até 31/12/2026" : "2027+");
+  const linhasJ = ["Pré-Closing","Até 31/12/2026","2027+","Sem data-fim"].map(j => {
+    const g = rg.base.filter(a => jan(a) === j);
+    return [T(j,{bold:true}), T(g.length,{align:"center"}), T(g.filter(a=>a.st==="Concluído").length,{align:"center"}), T(g.filter(a=>a.st==="Em Andamento").length,{align:"center"}), T(g.filter(ehAltoCrit).length,{align:"center"})];
+  });
+  linhasJ.push([H("Total da FT",{align:"left"}), H(tot), H(co), H(ea), H(rg.base.filter(ehAltoCrit).length)]);
+  s.addTable([[H("Janela",{align:"left"}),H("Total"),H("Concl."),H("Em and."),H("Alto/Crít.")]].concat(linhasJ), { x:4.6, y:2.5, w:4.3, colW:[1.4,0.65,0.65,0.75,0.85], rowH:0.34, fontSize:9, border:{ type:"solid", color:"D5DCE4", pt:0.5 }, fill:{ color:"F6F9FB" } });
+  // vencidas por processo (esquerda)
+  const procV = processosVencidos(rg).slice(0, 5);
+  s.addText("VENCIDAS POR PROCESSO", { x:0.4, y:2.45, w:4, h:0.3, fontFace:F, fontSize:12, bold:true, color:C.head });
+  s.addTable([[H("Processo",{align:"left"}),H("Ativ."),H("Venc."),H("Bloq.")]].concat(procV.map(pn => [
+    T(pn), T(rg.base.filter(a => a.proc===pn).length,{align:"center"}), T(rg.ven.filter(a => a.proc===pn).length,{align:"center",bold:true,color:C.red}), T(rg.blo.filter(a => a.proc===pn).length,{align:"center"})
+  ])), { x:0.4, y:2.8, w:4.0, colW:[2.2,0.55,0.65,0.6], rowH:0.27, fontSize:8.5, border:{ type:"solid", color:"D5DCE4", pt:0.5 } });
+  // inícios atrasados por criticidade (direita)
+  s.addText(`Início planejado até ${refBR} e status Não Iniciado (${rg.ini.length})`, { x:9.2, y:2.45, w:3.9, h:0.3, fontFace:F, fontSize:10, color:C.txt });
+  [["Crítico","7B0D1E"],["Alto","C00000"],["Médio","F2B705"],["Baixo","00A04A"]].forEach((c, k) => {
+    const v = rg.ini.filter(a => k===0 ? /^Crítico/.test(a.imp||"") : a.imp===c[0]).length;
+    s.addShape(p.ShapeType.rect, { x:9.2 + k*0.98, y:2.8, w:0.9, h:0.75, fill:{ color:"F6F9FB" }, line:{ color:c[1], width:2 } });
+    s.addText([{ text:String(v)+"\n", options:{ fontSize:18, bold:true, color:c[1] } }, { text:c[0], options:{ fontSize:9, color:C.gry } }], { x:9.2 + k*0.98, y:2.8, w:0.9, h:0.75, fontFace:F, align:"center", valign:"middle" });
+  });
+  const crit = rg.ini.filter(a => /^Crítico/.test(a.imp||""));
+  s.addShape(p.ShapeType.rect, { x:9.2, y:3.7, w:3.9, h:1.6, fill:{ color:"FDF0F2" }, line:{ color:C.red, width:1 } });
+  s.addText([{ text:"Críticas que deveriam ter iniciado: " + crit.length + "\n", options:{ bold:true, fontSize:11, color:C.txt } }]
+    .concat(crit.slice(0,6).map(a => ({ text:"• " + a.at + " " + a.nome.slice(0,60) + (a.nome.length>60?"…":"") + "\n", options:{ fontSize:8.5, color:C.txt } }))),
+    { x:9.3, y:3.75, w:3.7, h:1.5, fontFace:F, valign:"top" });
+  // rodapé: o que está vencido, por processo
+  const blocos = processosVencidos(rg).filter(pn => rg.ven.some(a => a.proc===pn)).slice(0, 6).map(pn => {
+    const vs = rg.ven.filter(a => a.proc===pn), nd = (notaDe("p", pn)||{dados:{}}).dados.diag;
+    return [{ text: pn + ": " + vs.length + " vencida(s). ", options:{ bold:true, color:C.head } },
+            { text: (nd ? nd : vs.slice(0,2).map(a => a.at + " " + a.nome.slice(0,55) + (a.nome.length>55?"…":"")).join("; ") + (vs.length>2 ? "; e mais " + (vs.length-2) : "")) + "\n", options:{ color:C.txt } }];
+  }).flat();
+  s.addText([{ text:`Das ${rg.ven.length} ações vencidas que deveriam estar concluídas:\n`, options:{ bold:true, fontSize:12, color:C.head } }].concat(blocos),
+    { x:0.4, y:4.85, w:8.6, h:2.15, fontFace:F, fontSize:8, valign:"top", paraSpaceAfter:1 });
+  rod(s);
+
+  // 3. vencidas vs. baseline: aging por processo + diagnóstico
+  const ag = a => a.atraso <= 15 ? 0 : a.atraso <= 30 ? 1 : 2;
+  const nAg = [0,1,2].map(k => rg.ven.filter(a => ag(a)===k).length);
+  const nAC = rg.ven.filter(ehAltoCrit).length, nCr = rg.ven.filter(a => /^Crítico/.test(a.imp||"")).length;
+  s = p.addSlide();
+  titulo(s, `FT Logística: ${rg.ven.length} vencidas vs. baseline; ${nAC} Alto/Crítico (${nCr} ${nCr===1?"crítica":"críticas"}).`);
+  s.addShape(p.ShapeType.roundRect, { x:0.4, y:0.95, w:12.5, h:0.45, fill:{ color:"E5E7EB" }, rectRadius:0.08 });
+  s.addText([{ text:"OBJETIVO   ", options:{ bold:true, color:C.ora } }, { text:"Dar visibilidade às atividades vencidas da FT Logística, por tema/processo e aging, com criticidade, progresso e replanejamento.", options:{ color:C.txt } }], { x:0.55, y:0.95, w:12.2, h:0.45, fontFace:F, fontSize:11 });
+  kpi(s, 0.4, 1.55, 2.4, rg.ven.length, "Atividades vencidas vs. baseline", C.navy);
+  kpi(s, 2.95, 1.55, 2.4, nAg[0], "até 15 dias · " + pct(nAg[0], rg.ven.length), C.ora);
+  kpi(s, 5.5, 1.55, 2.4, nAg[1], "de 16 a 30 dias · " + pct(nAg[1], rg.ven.length), C.gry);
+  kpi(s, 8.05, 1.55, 2.4, nAg[2], "mais de 30 dias · " + pct(nAg[2], rg.ven.length), C.yel);
+  const pv = processosVencidos(rg).filter(pn => rg.ven.some(a => a.proc===pn));
+  const top = pv.slice(0, 5), resto = pv.slice(5);
+  const linA = (nome, sub, vs) => [T(nome + (sub ? "\n" + sub : ""), { bold:true }),
+    T(vs.filter(a => ag(a)===0).length || "–", { align:"center", fill:{ color:"E3F2F3" } }),
+    T(vs.filter(a => ag(a)===1).length || "–", { align:"center", fill:{ color:"FBF0DA" } }),
+    T(vs.filter(a => ag(a)===2).length || "–", { align:"center", fill:{ color:"F6DDE2" } }),
+    T(vs.length, { align:"center", bold:true }), T(vs.filter(ehAltoCrit).length, { align:"center", bold:true, color:C.red })];
+  const rowsA = [[H("Tema / Processo",{align:"left"}),H("Até 15 dias",{fill:{color:"128A8F"}}),H("16 a 30",{fill:{color:"C98A12"}}),H("> 30 dias",{fill:{color:"B83A4B"}}),H("Total"),H("Alto/Crít.")]]
+    .concat(top.map(pn => linA(pn, rg.base.filter(a => a.proc===pn).length + " ativ. no escopo", rg.ven.filter(a => a.proc===pn))));
+  if (resto.length) rowsA.push(linA("Demais (" + resto.length + ")", "processos agrupados", rg.ven.filter(a => resto.includes(a.proc))));
+  rowsA.push([H("Total",{align:"left"}), H(nAg[0] + " (" + pct(nAg[0],rg.ven.length) + ")"), H(nAg[1] + " (" + pct(nAg[1],rg.ven.length) + ")"), H(nAg[2] + " (" + pct(nAg[2],rg.ven.length) + ")"), H(rg.ven.length), H(nAC)]);
+  s.addTable(rowsA, { x:0.4, y:2.7, w:5.6, colW:[2.0,0.75,0.75,0.75,0.6,0.75], rowH:0.5, border:{ type:"solid", color:"D5DCE4", pt:0.5 } });
+  const rowsD = [[H("Diagnóstico: problema, risco e solução",{align:"left"}), H("Criticidade e o que destrava",{align:"left"})]]
+    .concat(top.concat(resto.length ? ["__demais"] : []).map(pn => {
+      const vs = pn === "__demais" ? rg.ven.filter(a => resto.includes(a.proc)) : rg.ven.filter(a => a.proc===pn);
+      const ac = vs.filter(ehAltoCrit), comJ = ac.filter(a => justDe(a)).length;
+      const nt = pn === "__demais" ? null : (notaDe("p", pn)||{dados:{}}).dados;
+      return [T(nt && nt.diag ? nt.diag : "", { fontSize:8.5 }),
+              T((ac.length ? "ALTO/CRÍT. " + ac.length + " · " + comJ + " de " + ac.length + " com justificativa" : "Sem Alto/Crítico") + (nt && nt.destrava ? "\n" + nt.destrava : ""), { fontSize:8.5, color:"9B1C2C" })];
+    }));
+  s.addTable(rowsD, { x:6.3, y:2.7, w:6.6, colW:[4.2,2.4], rowH:0.5, border:{ type:"solid", color:"D5DCE4", pt:0.5 } });
+  const maiorP = pv[0];
+  s.addText(leitura || `Leitura: ${nAC} das ${rg.ven.length} vencidas são Alto ou Crítico; “${maiorP||"—"}” concentra ${maiorP ? rg.ven.filter(a => a.proc===maiorP).length : 0} delas.`,
+    { x:6.3, y:6.35, w:6.6, h:0.6, fontFace:F, fontSize:10, bold:true, color:"FFFFFF", fill:{ color:"128A8F" }, valign:"middle", margin:6 });
+  rod(s);
+
+  // 4+. tabelas: vencidas, bloqueadas vencidas, inícios atrasados
+  const tabela = (lista, nomeT, rotAtraso, sufixo) => {
+    const POR = 11, pags = Math.max(1, Math.ceil(lista.length / POR));
+    for (let k = 0; k < pags; k++){
+      const fatia = lista.slice(k*POR, (k+1)*POR);
+      const sl = p.addSlide();
+      titulo(sl, nomeT + (pags > 1 ? ` (${k+1}/${pags})` : ""), "Referência: " + refBR);
+      kpi(sl, 8.3, 0.25, 1.5, lista.length, rotAtraso);
+      kpi(sl, 9.9, 0.25, 1.5, lista.filter(a => a.st === "Não Iniciado").length, "não iniciadas");
+      kpi(sl, 11.5, 0.25, 1.5, (lista[0] ? lista[0].atraso : 0) + "d", "maior atraso");
+      const rows = [[H("ID"),H("Atividade"),H("Importância"),H("Executor"),H("Justificativa"),H(sufixo)]].concat(fatia.map((a, i) => {
+        const zebra = i % 2 ? "F4F7FA" : "FFFFFF";
+        return [T(a.at,{fill:{color:zebra}}), T(a.nome.length > 100 ? a.nome.slice(0,98) + "…" : a.nome,{fill:{color:zebra}}),
+                T(a.imp || "—",{ align:"center", bold:true, color:(a.imp==="Médio"?C.txt:"FFFFFF"), fill:{ color:corImp(a.imp) } }),
+                T(a.ex,{fill:{color:zebra}}), T((j => j.length > 150 ? j.slice(0,148) + "…" : j)(justDe(a)),{fill:{color:zebra}}), T(a.atraso + "d",{ align:"center", color:C.ora, fill:{color:zebra} })];
+      }));
+      sl.addTable(rows, { x:0.15, y:1.35, w:13.0, colW:[0.9,4.0,1.05,2.0,4.3,0.75], rowH:0.4, fontSize:8, border:{ type:"solid", color:"E2E8F0", pt:0.5 } });
+      if (k === pags - 1 && lista.length){
+        const nni = lista.filter(a => a.st === "Não Iniciado").length;
+        sl.addText(leitura || `Foco de gestão: ${nni} atividades não iniciadas; maior atraso em ${lista[0].at} (${lista[0].atraso}d).`, { x:0.4, y:6.95, w:6.8, h:0.45, fontFace:F, fontSize:9, bold:true, color:C.head });
+      }
+      rod(sl);
+    }
+  };
+  tabela(rg.ven, "Atividades vencidas — visão executiva", "vencidas", "Atraso");
+  if (rg.blo.length) tabela(rg.blo, "Bloqueadas com prazo vencido — fora da conta", "bloqueadas", "Atraso");
+  tabela(rg.ini, "Inícios atrasados — visão executiva", "atrasos", "Atraso");
+
+  await p.writeFile({ fileName: "painel-executivo-logistica-" + pac.ref + ".pptx" });
 }
 
 /* ---------- modo local (teste no computador) ---------- */
