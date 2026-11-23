@@ -507,6 +507,16 @@ async function salvaNota(t){
 }
 
 /* ---------- PowerPoint no layout do Painel Executivo do comitê ---------- */
+let capaCache;
+async function imagemCapa(){
+  if (capaCache !== undefined) return capaCache;
+  capaCache = null;
+  try{
+    if (CLOUD && sb){ const { data } = await sb.from("base").select("dados").eq("id","capa").maybeSingle(); if (data && data.dados && data.dados.img) capaCache = data.dados.img; }
+    else { const r = await fetch("capa-fundo.jpg"); if (r.ok){ const b = await r.blob(); capaCache = await new Promise(ok => { const f = new FileReader(); f.onload = () => ok(f.result); f.readAsDataURL(b); }); } }
+  }catch(e){ console.warn("capa", e); }
+  return capaCache;
+}
 $("#bt-ppt").onclick = gerarPPT;
 async function gerarPPT(){
   if (!pac){ alert("Carregue o pacote do dia primeiro."); return; }
@@ -537,13 +547,18 @@ async function montaPPT(){
   const H = (t, o) => ({ text:t, options:Object.assign({ bold:true, color:"FFFFFF", fill:{ color:C.head }, fontFace:F, fontSize:10, align:"center", valign:"middle" }, o||{}) });
   const T = (t, o) => ({ text:String(t ?? ""), options:Object.assign({ fontFace:F, fontSize:9, color:C.txt, valign:"middle" }, o||{}) });
 
-  // 1. capa
-  let s = p.addSlide(); s.background = { color:C.navy };
-  s.addShape(p.ShapeType.rect, { x:0, y:5.9, w:13.33, h:0.08, fill:{ color:C.teal } });
-  s.addText("Comitê Executivo", { x:0.8, y:2.1, w:11, h:0.8, fontFace:F, fontSize:36, bold:true, color:"FFFFFF" });
-  s.addText("FT 06b - Logística", { x:0.8, y:2.9, w:11, h:0.6, fontFace:F, fontSize:24, color:"BFE3EE" });
-  s.addText("Painel Executivo", { x:0.8, y:3.5, w:11, h:0.5, fontFace:F, fontSize:18, color:"BFE3EE" });
-  s.addText(refBR, { x:0.8, y:4.3, w:11, h:0.5, fontFace:F, fontSize:16, color:"FFFFFF" });
+  // 1. capa: a mesma do deck do comitê (foto + faixas + logo vêm do banco,
+  //    linha 'capa' da tabela base; os textos entram por cima, nas mesmas
+  //    posições e fonte do original). Sem a imagem, capa lisa.
+  let s = p.addSlide();
+  const capa = await imagemCapa();
+  if (capa) s.addImage({ data:capa, x:0, y:0, w:13.333, h:7.5 }); else s.background = { color:C.navy };
+  const TB = "Trebuchet MS";
+  s.addShape(p.ShapeType.rect, { x:0.665, y:0.317, w:0.042, h:0.28, fill:{ color:"FFFFFF" }, line:{ color:"FFFFFF", width:0 } });
+  s.addText("Painel Executivo", { x:0.706, y:0.29, w:3, h:0.32, fontFace:TB, fontSize:16, color:"FFFFFF", margin:0 });
+  s.addText("Comitê Executivo\nFT 06b - Logística", { x:0.665, y:1.244, w:5.64, h:1.73, fontFace:TB, fontSize:36, bold:true, color:"FFFFFF", valign:"middle", margin:0 });
+  s.addShape(p.ShapeType.rect, { x:0.662, y:3.2, w:0.9, h:0.049, fill:{ color:"FFFFFF" }, line:{ color:"FFFFFF", width:0 } });
+  s.addText(refBR, { x:0.662, y:3.58, w:2.6, h:0.34, fontFace:TB, fontSize:14, color:"FFFFFF", margin:0 });
 
   // 2. panorama executivo
   const tot = rg.base.length, co = rg.base.filter(a => a.st==="Concluído").length, ea = rg.base.filter(a => a.st==="Em Andamento").length;
@@ -628,29 +643,43 @@ async function montaPPT(){
     { x:6.3, y:6.35, w:6.6, h:0.6, fontFace:F, fontSize:10, bold:true, color:"FFFFFF", fill:{ color:"128A8F" }, valign:"middle", margin:6 });
   rod(s);
 
-  // 4+. tabelas: vencidas, bloqueadas vencidas, inícios atrasados
+  // 4+. tabelas: vencidas, bloqueadas vencidas, inícios atrasados — AGRUPADAS
+  //     POR PROCESSO (pedido do Bruno, 23/11): cada processo começa no seu
+  //     próprio slide, na ordem do que tem mais para o que tem menos, e a
+  //     tabela traz a coluna Processo.
   const tabela = (lista, nomeT, rotAtraso, sufixo) => {
-    const POR = 11, pags = Math.max(1, Math.ceil(lista.length / POR));
-    for (let k = 0; k < pags; k++){
-      const fatia = lista.slice(k*POR, (k+1)*POR);
-      const sl = p.addSlide();
-      titulo(sl, nomeT + (pags > 1 ? ` (${k+1}/${pags})` : ""), "Referência: " + refBR);
-      kpi(sl, 8.3, 0.25, 1.5, lista.length, rotAtraso);
-      kpi(sl, 9.9, 0.25, 1.5, lista.filter(a => a.st === "Não Iniciado").length, "não iniciadas");
-      kpi(sl, 11.5, 0.25, 1.5, (lista[0] ? lista[0].atraso : 0) + "d", "maior atraso");
-      const rows = [[H("ID"),H("Atividade"),H("Importância"),H("Executor"),H("Justificativa"),H(sufixo)]].concat(fatia.map((a, i) => {
-        const zebra = i % 2 ? "F4F7FA" : "FFFFFF";
-        return [T(a.at,{fill:{color:zebra}}), T(a.nome.length > 100 ? a.nome.slice(0,98) + "…" : a.nome,{fill:{color:zebra}}),
-                T(a.imp || "—",{ align:"center", bold:true, color:(a.imp==="Médio"?C.txt:"FFFFFF"), fill:{ color:corImp(a.imp) } }),
-                T(a.ex,{fill:{color:zebra}}), T((j => j.length > 150 ? j.slice(0,148) + "…" : j)(justDe(a)),{fill:{color:zebra}}), T(a.atraso + "d",{ align:"center", color:C.ora, fill:{color:zebra} })];
-      }));
-      sl.addTable(rows, { x:0.15, y:1.35, w:13.0, colW:[0.9,4.0,1.05,2.0,4.3,0.75], rowH:0.4, fontSize:8, border:{ type:"solid", color:"E2E8F0", pt:0.5 } });
-      if (k === pags - 1 && lista.length){
-        const nni = lista.filter(a => a.st === "Não Iniciado").length;
-        sl.addText(leitura || `Foco de gestão: ${nni} atividades não iniciadas; maior atraso em ${lista[0].at} (${lista[0].atraso}d).`, { x:0.4, y:6.95, w:6.8, h:0.45, fontFace:F, fontSize:9, bold:true, color:C.head });
+    const POR = 11;
+    const grupos = new Map();
+    lista.forEach(a => { const k = a.proc || "(sem processo)"; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(a); });
+    const ordem = [...grupos.entries()].sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0]));
+    ordem.forEach(([proc, its], gi) => {
+      const pags = Math.ceil(its.length / POR);
+      for (let k = 0; k < pags; k++){
+        const fatia = its.slice(k*POR, (k+1)*POR);
+        const sl = p.addSlide();
+        sl.addShape(p.ShapeType.rect, { x:0, y:0, w:13.33, h:0.12, fill:{ color:C.head } });
+        sl.addText(nomeT, { x:0.4, y:0.22, w:7.7, h:0.4, fontFace:F, fontSize:18, bold:true, color:C.teal, margin:0 });
+        sl.addText(proc + (pags > 1 ? ` (${k+1}/${pags})` : ""), { x:0.4, y:0.6, w:7.7, h:0.42, fontFace:F, fontSize:16, bold:true, color:C.navy, fit:"shrink", margin:0 });
+        sl.addText(`Referência: ${refBR} · processo ${gi+1} de ${ordem.length} · ${its.length} de ${lista.length} ${rotAtraso}`, { x:0.4, y:1.0, w:7.7, h:0.28, fontFace:F, fontSize:10, color:C.gry, margin:0 });
+        kpi(sl, 8.3, 0.25, 1.5, its.length, rotAtraso);
+        kpi(sl, 9.9, 0.25, 1.5, its.filter(a => a.st === "Não Iniciado").length, "não iniciadas");
+        kpi(sl, 11.5, 0.25, 1.5, (its[0] ? its[0].atraso : 0) + "d", "maior atraso");
+        const rows = [[H("ID"),H("Atividade"),H("Processo"),H("Importância"),H("Executor"),H("Justificativa"),H(sufixo)]].concat(fatia.map((a, i) => {
+          const zebra = i % 2 ? "F4F7FA" : "FFFFFF";
+          return [T(a.at,{fill:{color:zebra}}), T(a.nome.length > 95 ? a.nome.slice(0,93) + "…" : a.nome,{fill:{color:zebra}}),
+                  T(a.proc || "—",{fill:{color:zebra}, fontSize:7.5}),
+                  T(a.imp || "—",{ align:"center", bold:true, color:(a.imp==="Médio"?C.txt:"FFFFFF"), fill:{ color:corImp(a.imp) } }),
+                  T(a.ex,{fill:{color:zebra}}), T((j => j.length > 140 ? j.slice(0,138) + "…" : j)(justDe(a)),{fill:{color:zebra}}), T(a.atraso ? a.atraso + "d" : "hoje",{ align:"center", color:C.ora, fill:{color:zebra} })];
+        }));
+        sl.addTable(rows, { x:0.15, y:1.4, w:13.0, colW:[0.85,3.4,1.4,1.1,1.8,3.75,0.7], rowH:0.4, fontSize:8, border:{ type:"solid", color:"E2E8F0", pt:0.5 } });
+        if (k === pags - 1){
+          const nt = (notaDe("p", proc)||{dados:{}}).dados;
+          const nni = its.filter(a => a.st === "Não Iniciado").length;
+          sl.addText(nt.destrava ? "O que destrava: " + nt.destrava : `Foco de gestão: ${nni} não iniciada(s); maior atraso em ${its[0].at} (${its[0].atraso}d).`, { x:0.4, y:6.95, w:6.8, h:0.45, fontFace:F, fontSize:9, bold:true, color:C.head });
+        }
+        rod(sl);
       }
-      rod(sl);
-    }
+    });
   };
   tabela(rg.ven, "Atividades vencidas — visão executiva", "vencidas", "Atraso");
   if (rg.blo.length) tabela(rg.blo, "Bloqueadas com prazo vencido — fora da conta", "bloqueadas", "Atraso");
