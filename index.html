@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acompanhamento Logística</title>
+<!--
+  Casca pública do report da Logística (criada em 23/11/2026).
+  ESTE ARQUIVO NÃO TEM DADO NENHUM e vai para o GitHub, que é público.
+  O dado do dia (reports + atividades) e os lançamentos do time ficam no
+  Supabase, atrás do login. Pacote: scripts/pacote-online.py. Banco: online/schema.sql.
+-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ===== CONFIGURAÇÃO. Vazio = modo local (teste no computador, sem login) ===== */
+const SB_URL = "https://bjxjgijhgkwcjcyeewtu.supabase.co";
+const SB_KEY = "sb_publishable_MgxA0o0Gg9ff9xgT0LjkvA_mnXmpSw8"; // publishable: pode ficar público. NUNCA a secret
+const DONO   = "bruno.figueiredo@oceanpact.com"; // único que carrega o pacote do dia e marca o retorno ao Monday
+</script>
+<style>
+:root{--n:#0b1f3a;--m:#64748b;--l:#e5e7eb;--bg:#f5f7fb;--ok:#047857;--er:#b91c1c;--av:#b45309}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:#1e293b;font:14px "Segoe UI",Arial,sans-serif;display:flex;flex-direction:column}
+button,select,input,textarea{font:inherit}
+.top{background:linear-gradient(135deg,#0b1f3a,#194d82,#2376a8);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.top h1{font-size:16px;margin:0 8px 0 0;font-weight:700}
+.pill{padding:4px 10px;border:1px solid #ffffff4d;border-radius:99px;background:#ffffff14;font-size:12px;white-space:nowrap}
+.pill.ok{background:#05966933;border-color:#34d39988}.pill.er{background:#dc262655;border-color:#fca5a5}.pill.av{background:#f59e0b55;border-color:#fcd34d}
+.top .esp{flex:1}
+.top button,.top label.bt{background:#ffffff1f;color:#fff;border:1px solid #ffffff55;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12.5px}
+.top button:hover,.top label.bt:hover{background:#ffffff33}
+.abas{display:flex;gap:4px;padding:8px 16px 0;background:#fff;border-bottom:1px solid var(--l)}
+.aba{border:1px solid var(--l);border-bottom:0;background:#f1f5f9;color:var(--m);border-radius:10px 10px 0 0;padding:9px 18px;font-weight:700;font-size:13px;cursor:pointer}
+.aba.on{background:#fff;color:var(--n);box-shadow:0 -2px 6px #0f172a0a;position:relative;top:1px}
+.palco{flex:1;position:relative;min-height:0}
+.palco iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg);display:none}
+.palco iframe.on{display:block}
+.vazio{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--m);padding:24px;text-align:center}
+#resumo{position:absolute;inset:0;overflow:auto;padding:18px 22px 60px;display:none}
+#resumo.on{display:block}
+.card{background:#fff;border:1px solid var(--l);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.card h2{margin:0 0 8px;font-size:16px;color:var(--n)}
+.small{font-size:12px;color:var(--m)}
+table.ls{width:100%;border-collapse:collapse;font-size:12.5px}
+table.ls th{text-align:left;color:var(--m);font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--l);padding:6px}
+table.ls td{border-bottom:1px solid #eef1f5;padding:6px;vertical-align:top}
+table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:#eef2f7;color:#334155}
+.tag.ok{background:#d1fae5;color:#065f46}.tag.av{background:#fef3c7;color:#92400e}.tag.er{background:#fee2e2;color:#991b1b}
+/* tela de login */
+#gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;align-items:center;justify-content:center;padding:16px}
+.gform{background:#fff;border:1px solid var(--l);border-radius:12px;padding:22px;width:min(380px,100%);box-shadow:0 10px 30px #0b1f3a1a}
+.gform h2{margin:0 0 4px;font-size:18px;color:var(--n)}
+.gform label{display:block;font-size:12px;font-weight:700;color:var(--m);margin:12px 0 4px}
+.gform input{width:100%;padding:8px 10px;border:1px solid var(--l);border-radius:8px}
+.gform .msg{color:var(--er);font-size:12px;min-height:16px;margin-top:8px}
+.pri{background:var(--n);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer}
+.pri:disabled{opacity:.5;cursor:default}
+.sec{background:#fff;color:var(--n);border:1px solid var(--l);border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+/* painel de lançamento */
+#fundo{position:fixed;inset:0;background:#0f172a66;z-index:50;display:none}
+#painel{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:#fff;z-index:51;box-shadow:-10px 0 30px #0f172a33;display:none;flex-direction:column}
+#painel.on,#fundo.on{display:flex}
+#painel header{padding:14px 18px;border-bottom:1px solid var(--l)}
+#painel header .id{font-weight:800;color:var(--n)}
+#painel header .nm{font-size:14px;margin:4px 0}
+#painel .corpo{flex:1;overflow:auto;padding:14px 18px}
+#painel .rod{padding:12px 18px;border-top:1px solid var(--l);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+#painel .rod .msg{flex:1;font-size:12px;color:var(--m)}
+.grade{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12.5px;margin-bottom:12px}
+.grade b{color:var(--m);font-weight:600}
+.campo{margin:12px 0}
+.campo label{display:block;font-size:12px;font-weight:700;color:var(--n);margin-bottom:4px}
+.campo .aj{font-size:11.5px;color:var(--m);margin-bottom:4px}
+.campo textarea,.campo select,.campo input{width:100%;padding:8px 10px;border:1px solid var(--l);border-radius:8px}
+.campo textarea{min-height:70px;resize:vertical}
+.outros{background:#f8fafc;border:1px solid var(--l);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:12.5px}
+.outros .q{font-size:11px;color:var(--m)}
+.prev{font-size:12px;background:#f1f5f9;border-radius:6px;padding:6px 8px;margin-top:4px;color:#334155}
+@media (max-width:700px){.top h1{font-size:14px}.aba{padding:8px 10px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Acompanhamento — Logística</h1>
+  <span class="pill" id="p-ref">sem pacote carregado</span>
+  <span class="pill" id="p-sync" style="display:none"></span>
+  <span class="esp"></span>
+  <span class="small" id="p-quem" style="color:#dbeafe"></span>
+  <label class="bt" id="bt-pacote" style="display:none" title="Só para o dono: o pacote gerado pela rotina da manhã">Carregar pacote do dia<input type="file" id="in-pacote" accept=".json" hidden></label>
+  <button id="bt-sair" style="display:none">Sair</button>
+</div>
+<div class="abas">
+  <button class="aba on" data-aba="geral">Geral</button>
+  <button class="aba" data-aba="processo">Por processo</button>
+  <button class="aba" data-aba="resumo">Lançamentos do dia</button>
+</div>
+<div class="palco">
+  <div class="vazio" id="vazio">Carregando…</div>
+  <iframe id="fr-geral" title="Geral"></iframe>
+  <iframe id="fr-processo" title="Por processo"></iframe>
+  <div id="resumo"></div>
+</div>
+
+<!-- login -->
+<div id="gate">
+  <form class="gform" id="gform">
+    <h2>Acompanhamento — Logística</h2>
+    <div class="small">Acesso restrito ao time. Entre com seu e-mail corporativo e senha.</div>
+    <label for="g-mail">E-mail</label>
+    <input id="g-mail" type="email" required autocomplete="username">
+    <label for="g-pass">Senha</label>
+    <input id="g-pass" type="password" required autocomplete="current-password">
+    <div class="msg" id="g-msg"></div>
+    <button class="pri" id="g-go" type="submit" style="width:100%;margin-top:6px">Entrar</button>
+  </form>
+  <form class="gform" id="sform" style="display:none">
+    <h2>Defina sua senha</h2>
+    <div class="small">Primeiro acesso: troque a senha provisória por uma só sua. Mínimo de 8 caracteres.</div>
+    <label for="s-p1">Nova senha</label>
+    <input id="s-p1" type="password" required minlength="8" autocomplete="new-password">
+    <label for="s-p2">Repita a nova senha</label>
+    <input id="s-p2" type="password" required minlength="8" autocomplete="new-password">
+    <div class="msg" id="s-msg"></div>
+    <button class="pri" id="s-go" type="submit" style="width:100%;margin-top:6px">Salvar senha</button>
+  </form>
+</div>
+
+<!-- painel de lançamento por atividade -->
+<div id="fundo"></div>
+<aside id="painel" aria-label="Lançamento da atividade">
+  <header>
+    <div class="id" id="pn-id"></div>
+    <div class="nm" id="pn-nome"></div>
+    <div class="small" id="pn-proc"></div>
+  </header>
+  <div class="corpo">
+    <div class="grade" id="pn-grade"></div>
+    <div id="pn-outros"></div>
+    <div class="campo">
+      <label for="f-com">Comentário</label>
+      <div class="aj">Vira um comentário (update) no card do Monday.</div>
+      <textarea id="f-com" maxlength="3000"></textarea>
+    </div>
+    <div class="campo">
+      <label for="f-pref">Justificativa de vencimento ou atraso</label>
+      <div class="aj">Vai para a coluna "Justificativa Vencimento ou Atraso", no formato <b>Prefixo - texto</b>.</div>
+      <select id="f-pref"></select>
+      <textarea id="f-just" maxlength="1500" style="margin-top:6px;min-height:56px" placeholder="Detalhe da justificativa"></textarea>
+      <div class="prev" id="f-prev" style="display:none"></div>
+    </div>
+    <div class="campo">
+      <label for="f-pct">% Progresso</label>
+      <div class="aj">O Status no Monday segue o %: 100% vira Concluído; acima de 0%, Em Andamento.</div>
+      <select id="f-pct">
+        <option value="">não mudar</option>
+        <option>0%</option><option>25%</option><option>50%</option><option>75%</option><option>100%</option>
+      </select>
+    </div>
+  </div>
+  <div class="rod">
+    <span class="msg" id="pn-msg"></span>
+    <button class="sec" id="pn-fechar" type="button">Fechar</button>
+    <button class="pri" id="pn-salvar" type="button">Salvar</button>
+  </div>
+</aside>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const CLOUD = !!(SB_URL && SB_KEY);
+const PREFIXOS = [
+  "Atraso TI / sistemas","Reprogramação interna","Dependência de áreas","Processo / escopo",
+  "Planejamento subestimado","Outros","Aguardam predecessora / premissa","Transição de equipes",
+  "TI / desenvolvimento / cutoff","Replanejado pela área","Sem risco de atraso"
+];
+const LOCAL_LANC = "logistica-online-lanc";      // só no modo local
+const LOCAL_PAC  = "logistica-online-pacote";    // só no modo local
+
+let sb = null, eu = null, chan = null;
+let pac = null;               // pacote do dia (ref, lido, ...)
+let ativ = new Map();         // at -> atividade
+let lanc = new Map();         // id -> {id, autor, dados, atualizado_em}
+let abaAtual = "geral";
+let atAberta = null;
+
+/* ---------- utilidades ---------- */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dbr = iso => iso ? iso.slice(8,10)+"/"+iso.slice(5,7)+"/"+iso.slice(0,4) : "—";
+const hora = iso => { try{ const d=new Date(iso); return d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}); }catch(e){ return ""; } };
+async function ungz(b64){
+  const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const ds = new DecompressionStream("gzip");
+  const txt = await new Response(new Blob([bin]).stream().pipeThrough(ds)).text();
+  return txt;
+}
+function setSync(st, txt){
+  const e = $("#p-sync"); e.style.display = ""; e.textContent = txt;
+  e.className = "pill " + (st==="ok"?"ok":st==="er"?"er":"av");
+}
+function idLanc(at){ return "a|" + pac.ref + "|" + at + "|" + eu; }
+function lancDe(at){ return [...lanc.values()].filter(l => l.dados.tipo==="a" && l.dados.ref===pac.ref && l.dados.at===at); }
+function temConteudo(d){ return !!((d.comentario||"").trim() || d.prefixo || (d.justificativa||"").trim() || d.pct); }
+
+/* ---------- abas ---------- */
+document.querySelectorAll(".aba").forEach(b => b.onclick = () => mostra(b.dataset.aba));
+function mostra(a){
+  abaAtual = a;
+  document.querySelectorAll(".aba").forEach(b => b.classList.toggle("on", b.dataset.aba===a));
+  $("#fr-geral").classList.toggle("on", a==="geral" && !!pac);
+  $("#fr-processo").classList.toggle("on", a==="processo" && !!pac);
+  $("#resumo").classList.toggle("on", a==="resumo" && !!pac);
+  if (a==="resumo") desenhaResumo();
+}
+
+/* ---------- pacote do dia ---------- */
+async function aplicaPacote(p){
+  if (!p || p.versao!==1 || !p.geral || !p.processo || !p.atividades) throw new Error("Arquivo não é um pacote do dia válido.");
+  pac = { ref:p.ref, lido:p.lido, gerado:p.gerado };
+  const [g, pr, at] = await Promise.all([ungz(p.geral), ungz(p.processo), ungz(p.atividades)]);
+  ativ = new Map(JSON.parse(at).map(a => [a.at, a]));
+  $("#p-ref").textContent = "Export do Monday: " + (p.lido || dbr(p.ref));
+  carregaFrame("#fr-geral", g);
+  carregaFrame("#fr-processo", pr);
+  $("#vazio").style.display = "none";
+  mostra(abaAtual);
+}
+function carregaFrame(sel, html){
+  const fr = $(sel);
+  fr.onload = () => realca(fr);
+  fr.srcdoc = html;
+}
+$("#in-pacote").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try{
+    const p = JSON.parse(await f.text());
+    if (CLOUD){
+      if (!confirm("Publicar o pacote de " + dbr(p.ref) + " para TODO o time?\nO pacote anterior sai do ar. Os lançamentos ficam guardados.")) return;
+      setSync("busy","publicando pacote…");
+      const { error } = await sb.from("base").upsert({ id:"pacote", dados:p, atualizado_por:eu });
+      if (error) throw error;
+    } else {
+      try{ localStorage.setItem(LOCAL_PAC, JSON.stringify(p)); }catch(x){}
+    }
+    await aplicaPacote(p);
+    setSync("ok","● pacote de " + dbr(p.ref) + " no ar");
+  }catch(err){ console.error(err); alert("Não consegui carregar o pacote: " + (err.message||err)); setSync("er","⚠ pacote não carregado"); }
+});
+
+/* ---------- liga os reports ao painel de lançamento ---------- */
+const CSS_FRAME = `
+  .notarow,.notabar,#btSalvar{display:none!important}
+  tr[data-online-at] > td:first-child{cursor:pointer;white-space:nowrap}
+  tr[data-online-at] > td:first-child:hover{text-decoration:underline}
+  .ol-bt{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;border:1px solid #cbd5e1;background:#fff;color:#0b1f3a;font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle}
+  .ol-bt:hover{background:#0b1f3a;color:#fff}
+  tr.ol-tem > td:first-child{box-shadow:inset 4px 0 0 #0f766e}
+  .ol-res{display:block;margin-top:5px;font-size:11.5px;color:#0f766e;background:#ecfdf5;border-radius:6px;padding:4px 7px;white-space:pre-wrap}
+`;
+function realca(fr){
+  const doc = fr.contentDocument; if (!doc) return;
+  const st = doc.createElement("style"); st.textContent = CSS_FRAME; doc.head.appendChild(st);
+  doc.querySelectorAll("tr").forEach(tr => {
+    const td = tr.querySelector("td"); if (!td) return;
+    const m = /^\s*(CON-\d+)\s*$/.exec(td.textContent); if (!m) return;
+    const at = m[1];
+    tr.setAttribute("data-online-at", at);
+    const bt = doc.createElement("span"); bt.className = "ol-bt"; bt.textContent = "✎ lançar"; bt.title = "Comentário, justificativa e % desta atividade";
+    td.appendChild(bt);
+    td.addEventListener("click", ev => { ev.stopPropagation(); abre(at); });
+  });
+  marcaFrame(fr);
+}
+function marcaFrame(fr){
+  const doc = fr.contentDocument; if (!doc || !pac) return;
+  doc.querySelectorAll("tr[data-online-at]").forEach(tr => {
+    const at = tr.getAttribute("data-online-at");
+    const ls = lancDe(at).filter(l => temConteudo(l.dados));
+    tr.classList.toggle("ol-tem", ls.length>0);
+    const task = tr.querySelector("td.task") || tr.children[1];
+    let r = task ? task.querySelector(".ol-res") : null;
+    if (!ls.length){ if (r) r.remove(); return; }
+    if (task && !r){ r = doc.createElement("span"); r.className = "ol-res"; task.appendChild(r); }
+    if (r) r.textContent = ls.map(l => resumoLinha(l)).join("\n");
+  });
+}
+function resumoLinha(l){
+  const d = l.dados, p = [];
+  if ((d.comentario||"").trim()) p.push("💬 " + d.comentario.trim());
+  if (d.prefixo) p.push("⚑ " + d.prefixo + ((d.justificativa||"").trim() ? " - " + d.justificativa.trim() : ""));
+  if (d.pct) p.push("% → " + d.pct);
+  return p.join(" · ") + "  — " + (d.nome_autor || l.autor) + ", " + hora(l.atualizado_em);
+}
+function remarcaTudo(){ marcaFrame($("#fr-geral")); marcaFrame($("#fr-processo")); if (abaAtual==="resumo") desenhaResumo(); if (atAberta) desenhaOutros(atAberta); }
+
+/* ---------- painel ---------- */
+$("#f-pref").innerHTML = '<option value="">— sem justificativa —</option>' + PREFIXOS.map(p => `<option>${esc(p)}</option>`).join("");
+function prevJust(){
+  const p = $("#f-pref").value, t = $("#f-just").value.trim(), e = $("#f-prev");
+  if (!p && !t){ e.style.display = "none"; return; }
+  e.style.display = ""; e.textContent = "Vai assim para o Monday: " + (p ? p + (t ? " - " + t : "") : "⚠ escolha o prefixo");
+}
+$("#f-pref").onchange = prevJust; $("#f-just").oninput = prevJust;
+function abre(at){
+  atAberta = at;
+  const a = ativ.get(at) || {};
+  $("#pn-id").textContent = at;
+  $("#pn-nome").textContent = a.nome || "(atividade fora do pacote do dia)";
+  $("#pn-proc").textContent = [a.proc, a.pai].filter(Boolean).join(" · ");
+  const linhas = [
+    ["Executor", a.ex], ["Envolvidos", a.env], ["Status", a.st], ["% no Monday", a.pr],
+    ["Baseline", (a.bi||a.bf) ? dbr(a.bi) + " – " + dbr(a.bf) : ""], ["Cronograma", (a.ci||a.cf) ? dbr(a.ci) + " – " + dbr(a.cf) : ""],
+    ["Justificativa hoje", a.just]
+  ];
+  $("#pn-grade").innerHTML = linhas.map(([k,v]) => `<b>${esc(k)}</b><span>${esc(v||"—")}</span>`).join("");
+  const meu = lanc.get(idLanc(at));
+  const d = meu ? meu.dados : {};
+  $("#f-com").value = d.comentario || ""; $("#f-pref").value = d.prefixo || ""; $("#f-just").value = d.justificativa || ""; $("#f-pct").value = d.pct || "";
+  prevJust(); desenhaOutros(at);
+  $("#pn-msg").textContent = meu ? "Seu lançamento de hoje: " + hora(meu.atualizado_em) : "";
+  $("#fundo").classList.add("on"); $("#painel").classList.add("on");
+  setTimeout(() => $("#f-com").focus(), 50);
+}
+function desenhaOutros(at){
+  const os = lancDe(at).filter(l => l.autor !== eu && temConteudo(l.dados));
+  $("#pn-outros").innerHTML = os.length ? '<div class="small" style="font-weight:700;margin-bottom:4px">Já lançado hoje por outras pessoas</div>' + os.map(l => `<div class="outros"><div class="q">${esc(l.dados.nome_autor||l.autor)} · ${esc(hora(l.atualizado_em))}</div>${esc(resumoLinha(l).replace(/  — .*$/,""))}</div>`).join("") : "";
+}
+function fecha(){ atAberta = null; $("#fundo").classList.remove("on"); $("#painel").classList.remove("on"); }
+$("#pn-fechar").onclick = fecha; $("#fundo").onclick = fecha;
+document.addEventListener("keydown", e => { if (e.key==="Escape" && atAberta) fecha(); });
+$("#pn-salvar").onclick = async () => {
+  const at = atAberta; if (!at || !pac) return;
+  const a = ativ.get(at) || {};
+  const dados = {
+    tipo:"a", ref:pac.ref, at, item:a.item||"", nome:a.nome||"", proc:a.proc||"",
+    comentario:$("#f-com").value.trim(), prefixo:$("#f-pref").value, justificativa:$("#f-just").value.trim(), pct:$("#f-pct").value,
+    nome_autor: nomeAutor()
+  };
+  if (!dados.prefixo && dados.justificativa){ $("#pn-msg").textContent = "Escolha o prefixo da justificativa."; return; }
+  const id = idLanc(at), agora = new Date().toISOString();
+  $("#pn-salvar").disabled = true; $("#pn-msg").textContent = "salvando…";
+  try{
+    if (CLOUD){
+      const { data, error } = await sb.from("lancamentos").upsert({ id, dados, autor:eu, atualizado_em:agora }).select().single();
+      if (error) throw error;
+      lanc.set(id, data);
+    } else {
+      lanc.set(id, { id, dados, autor:eu, atualizado_em:agora });
+      try{ localStorage.setItem(LOCAL_LANC, JSON.stringify([...lanc.values()])); }catch(x){}
+    }
+    $("#pn-msg").textContent = "✓ salvo às " + hora(agora);
+    remarcaTudo();
+    setTimeout(fecha, 500);
+  }catch(err){ console.error(err); $("#pn-msg").textContent = "⚠ não salvou: " + (err.message||err); }
+  finally{ $("#pn-salvar").disabled = false; }
+};
+function nomeAutor(){
+  if (!sb || !eu) return "teste local";
+  return eu;
+}
+
+/* ---------- aba "Lançamentos do dia" ---------- */
+function desenhaResumo(){
+  if (!pac){ $("#resumo").innerHTML = ""; return; }
+  const ls = [...lanc.values()].filter(l => l.dados.tipo==="a" && l.dados.ref===pac.ref && temConteudo(l.dados))
+    .sort((x,y) => (x.dados.proc||"").localeCompare(y.dados.proc||"") || x.dados.at.localeCompare(y.dados.at));
+  const pessoas = new Set(ls.map(l => l.autor));
+  const nJ = ls.filter(l => l.dados.prefixo).length, nC = ls.filter(l => (l.dados.comentario||"").trim()).length, nP = ls.filter(l => l.dados.pct).length;
+  let h = `<div class="card"><h2>Lançamentos de ${esc(dbr(pac.ref))}</h2>
+    <div class="small">${ls.length} lançamento(s) de ${pessoas.size} pessoa(s): ${nC} comentário(s), ${nJ} justificativa(s), ${nP} mudança(s) de %. Às 16h30 o que estiver aqui vai para o Monday. Clique na linha para abrir.</div></div>`;
+  h += `<div class="card"><table class="ls"><thead><tr><th>ID</th><th>Atividade</th><th>Lançamento</th><th>Quem / quando</th><th>Monday</th></tr></thead><tbody>`;
+  h += ls.map(l => {
+    const d = l.dados, mon = d.monday || null;
+    const tg = mon ? (mon.ok ? '<span class="tag ok">lançado</span>' : '<span class="tag er">não lançado</span>') : '<span class="tag av">aguardando 16h30</span>';
+    return `<tr class="cl" data-at="${esc(d.at)}"><td><b>${esc(d.at)}</b></td><td>${esc(d.nome)}<div class="small">${esc(d.proc)}</div></td><td style="white-space:pre-wrap">${esc(resumoLinha(l).replace(/  — .*$/,""))}</td><td class="small">${esc(d.nome_autor||l.autor)}<br>${esc(hora(l.atualizado_em))}</td><td>${tg}${mon && mon.obs ? '<div class="small">'+esc(mon.obs)+'</div>' : ''}</td></tr>`;
+  }).join("") || `<tr><td colspan="5" class="small">Nenhum lançamento ainda hoje.</td></tr>`;
+  h += `</tbody></table></div>`;
+  $("#resumo").innerHTML = h;
+  $("#resumo").querySelectorAll("tr.cl").forEach(tr => tr.onclick = () => abre(tr.dataset.at));
+}
+
+/* ---------- modo local (teste no computador) ---------- */
+async function iniciaLocal(){
+  eu = "local";
+  $("#bt-pacote").style.display = "";
+  try{ (JSON.parse(localStorage.getItem(LOCAL_LANC)||"[]")).forEach(l => lanc.set(l.id, l)); }catch(e){}
+  let p = null; try{ p = JSON.parse(localStorage.getItem(LOCAL_PAC)||"null"); }catch(e){}
+  if (p){ await aplicaPacote(p); setSync("av","modo local — teste, nada é compartilhado"); }
+  else { $("#vazio").textContent = "Modo local (teste). Use “Carregar pacote do dia” no canto de cima."; setSync("av","modo local"); }
+}
+
+/* ---------- modo online (Supabase) ---------- */
+function gate(qual, msg){
+  $("#gate").style.display = qual ? "flex" : "none";
+  $("#gform").style.display = qual==="login" ? "" : "none";
+  $("#sform").style.display = qual==="senha" ? "" : "none";
+  if (msg != null) $(qual==="senha" ? "#s-msg" : "#g-msg").textContent = msg;
+}
+async function carregaBase(){
+  const { data, error } = await sb.from("base").select("dados").eq("id","pacote").maybeSingle();
+  if (error) throw error;
+  if (!data){ $("#vazio").textContent = "O pacote do dia ainda não foi publicado. Volte daqui a pouco."; return; }
+  if (!pac || data.dados.ref !== pac.ref || data.dados.gerado !== pac.gerado) await aplicaPacote(data.dados);
+}
+async function carregaLanc(){
+  if (!pac) return;
+  const { data, error } = await sb.from("lancamentos").select("id,dados,autor,atualizado_em").eq("dados->>ref", pac.ref);
+  if (error) throw error;
+  lanc = new Map(data.map(r => [r.id, r]));
+  remarcaTudo();
+}
+async function entra(session){
+  const u = session.user; eu = (u.email||"").toLowerCase();
+  if (!(u.user_metadata && u.user_metadata.senha_definida)){ gate("senha",""); return; }
+  gate(null);
+  $("#p-quem").textContent = eu; $("#bt-sair").style.display = "";
+  if (eu === DONO.toLowerCase()) $("#bt-pacote").style.display = "";
+  setSync("busy","carregando…");
+  try{
+    await carregaBase(); await carregaLanc();
+    setSync("ok","● sincronizado");
+  }catch(err){ console.error(err); setSync("er","⚠ erro ao carregar"); $("#vazio").textContent = "Não consegui carregar: " + (err.message||err); }
+  if (chan) sb.removeChannel(chan);
+  chan = sb.channel("lanc-" + Date.now())
+    .on("postgres_changes", { event:"*", schema:"public", table:"lancamentos" }, p => {
+      if (p.eventType==="DELETE"){ lanc.delete(p.old.id); }
+      else if (p.new && p.new.dados && pac && p.new.dados.ref===pac.ref){ lanc.set(p.new.id, p.new); }
+      remarcaTudo();
+    })
+    .on("postgres_changes", { event:"*", schema:"public", table:"base" }, () => { carregaBase().then(carregaLanc).catch(console.error); })
+    .subscribe(s => { if (s==="CHANNEL_ERROR"||s==="TIMED_OUT") setSync("er","⚠ tempo real caiu — recarregue a página"); });
+}
+async function iniciaNuvem(){
+  if (!window.supabase){ gate("login","Não carregou a biblioteca de login (internet bloqueada?)."); return; }
+  sb = window.supabase.createClient(SB_URL, SB_KEY);
+  $("#gform").addEventListener("submit", async e => {
+    e.preventDefault(); $("#g-go").disabled = true; $("#g-msg").textContent = "";
+    const { data, error } = await sb.auth.signInWithPassword({ email:$("#g-mail").value.trim(), password:$("#g-pass").value });
+    $("#g-go").disabled = false;
+    if (error){ $("#g-msg").textContent = /invalid/i.test(error.message) ? "E-mail ou senha incorretos." : error.message; return; }
+    $("#g-pass").value = ""; await entra(data.session);
+  });
+  $("#sform").addEventListener("submit", async e => {
+    e.preventDefault();
+    const p1 = $("#s-p1").value, p2 = $("#s-p2").value;
+    if (p1 !== p2){ $("#s-msg").textContent = "As duas senhas não batem."; return; }
+    if (p1.length < 8){ $("#s-msg").textContent = "Use pelo menos 8 caracteres."; return; }
+    $("#s-go").disabled = true;
+    const { data, error } = await sb.auth.updateUser({ password:p1, data:{ senha_definida:true } });
+    $("#s-go").disabled = false;
+    if (error){ $("#s-msg").textContent = error.message; return; }
+    $("#s-p1").value = $("#s-p2").value = "";
+    const { data:s } = await sb.auth.getSession(); await entra(s.session);
+  });
+  $("#bt-sair").onclick = () => sb.auth.signOut();
+  sb.auth.onAuthStateChange(ev => { if (ev==="SIGNED_OUT") location.reload(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && eu) carregaBase().then(carregaLanc).catch(console.error); });
+  const { data } = await sb.auth.getSession();
+  if (data.session) await entra(data.session); else gate("login");
+}
+
+if (CLOUD) iniciaNuvem(); else iniciaLocal();
+</script>
+</body>
+</html>
