@@ -282,6 +282,8 @@ const CSS_FRAME = `
     .frente-row{grid-template-columns:1fr!important}
     .frow{font-size:12px}
     footer{font-size:11px}
+    /* título da seção preso no topo enquanto se rola por ela (aba Geral, celular) */
+    #pg-relatorio > section > .st{position:sticky;top:0;z-index:6;background:var(--bg);padding:8px 2px 6px;margin-bottom:8px;box-shadow:0 6px 8px -8px #0f172a55}
   }
 `;
 function realca(fr){
@@ -468,6 +470,7 @@ function htmlFechamento(){
     <div class="campo"><label>Leitura executiva (rodapé dos slides)</label>
       <textarea data-nota="g" data-chave="leitura" placeholder="Ex.: pactuar responsáveis e novas datas para as vencidas de Alto/Crítico.">${esc(gl ? gl.dados.texto : "")}</textarea>
       <div class="small">${gl ? "Última edição: " + esc(gl.dados.nome_autor || gl.autor) + ", " + esc(hora(gl.atualizado_em)) : ""}</div></div>
+    <div class="campo"><label for="f-modo">Tabelas de atividades no PPT</label><select id="f-modo"><option value="atraso">Enxuto: uma lista por tipo (vencidas, bloqueadas, inícios atrasados), da mais atrasada para a menos, com a coluna Processo</option><option value="processo">Por processo: um bloco de slides para cada processo (bem mais slides)</option></select></div>
     <button class="pri" id="bt-ppt2" type="button">Exportar PPT</button> <span class="small" id="ppt-msg"></span></div>`;
   h += `<div class="card"><h2>Diagnóstico por processo com vencidas</h2><table class="ls"><thead><tr><th style="width:22%">Processo</th><th>Diagnóstico (problema, risco e solução)</th><th style="width:30%">O que destrava</th><th></th></tr></thead><tbody>`;
   h += procs.map(p => {
@@ -483,6 +486,7 @@ function htmlFechamento(){
 }
 function ligaFechamento(){
   const b = $("#bt-ppt2"); if (b) b.onclick = gerarPPT;
+  const sm = $("#f-modo"); if (sm){ sm.value = modoTabelas(); sm.onchange = () => { try{ localStorage.setItem("logistica-ppt-modo", sm.value); }catch(e){} }; }
   $("#resumo").querySelectorAll("textarea[data-nota]").forEach(t => t.addEventListener("change", () => salvaNota(t)));
 }
 async function salvaNota(t){
@@ -508,6 +512,8 @@ async function salvaNota(t){
 
 /* ---------- PowerPoint no layout do Painel Executivo do comitê ---------- */
 let capaCache;
+// organização das tabelas do PPT: "atraso" (enxuto, padrão) ou "processo"; preferência de cada um, guardada no navegador
+function modoTabelas(){ const s = document.getElementById("f-modo"); if (s) return s.value; try{ return localStorage.getItem("logistica-ppt-modo") || "atraso"; }catch(e){ return "atraso"; } }
 async function imagemCapa(){
   if (capaCache !== undefined) return capaCache;
   capaCache = null;
@@ -651,7 +657,8 @@ async function montaPPT(){
     const POR = 11;
     const grupos = new Map();
     lista.forEach(a => { const k = a.proc || "(sem processo)"; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(a); });
-    const ordem = [...grupos.entries()].sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0]));
+    const porProc = modoTabelas() === "processo";
+    const ordem = porProc ? [...grupos.entries()].sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0])) : [[null, lista]];
     ordem.forEach(([proc, its], gi) => {
       const pags = Math.ceil(its.length / POR);
       for (let k = 0; k < pags; k++){
@@ -659,8 +666,8 @@ async function montaPPT(){
         const sl = p.addSlide();
         sl.addShape(p.ShapeType.rect, { x:0, y:0, w:13.33, h:0.12, fill:{ color:C.head } });
         sl.addText(nomeT, { x:0.4, y:0.22, w:7.7, h:0.4, fontFace:F, fontSize:18, bold:true, color:C.teal, margin:0 });
-        sl.addText(proc + (pags > 1 ? ` (${k+1}/${pags})` : ""), { x:0.4, y:0.6, w:7.7, h:0.42, fontFace:F, fontSize:16, bold:true, color:C.navy, fit:"shrink", margin:0 });
-        sl.addText(`Referência: ${refBR} · processo ${gi+1} de ${ordem.length} · ${its.length} de ${lista.length} ${rotAtraso}`, { x:0.4, y:1.0, w:7.7, h:0.28, fontFace:F, fontSize:10, color:C.gry, margin:0 });
+        sl.addText((proc || "Todos os processos, do mais atrasado ao menos atrasado") + (pags > 1 ? ` (${k+1}/${pags})` : ""), { x:0.4, y:0.6, w:7.7, h:0.42, fontFace:F, fontSize:proc ? 16 : 13, bold:true, color:C.navy, fit:"shrink", margin:0 });
+        sl.addText(proc ? `Referência: ${refBR} · processo ${gi+1} de ${ordem.length} · ${its.length} de ${lista.length} ${rotAtraso}` : `Referência: ${refBR} · ${lista.length} ${rotAtraso} · coluna Processo indica o tema`, { x:0.4, y:1.0, w:7.7, h:0.28, fontFace:F, fontSize:10, color:C.gry, margin:0 });
         kpi(sl, 8.3, 0.25, 1.5, its.length, rotAtraso);
         kpi(sl, 9.9, 0.25, 1.5, its.filter(a => a.st === "Não Iniciado").length, "não iniciadas");
         kpi(sl, 11.5, 0.25, 1.5, (its[0] ? its[0].atraso : 0) + "d", "maior atraso");
