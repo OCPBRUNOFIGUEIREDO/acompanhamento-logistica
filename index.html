@@ -87,6 +87,78 @@ table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
 .outros{background:#f8fafc;border:1px solid var(--l);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:12.5px}
 .outros .q{font-size:11px;color:var(--m)}
 .prev{font-size:12px;background:#f1f5f9;border-radius:6px;padding:6px 8px;margin-top:4px;color:#334155}
+/* aba "Painel gráfico" (24/11/2026) */
+#grafico{position:absolute;inset:0;overflow:auto;padding:0 18px 60px;display:none}
+#grafico.on{display:block}
+#grafico .barra{position:sticky;top:0;z-index:8;background:var(--bg);padding:12px 0 8px}
+#grafico .fl{background:#fff;border:1px solid var(--l);border-radius:12px;padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dd{position:relative}
+.dd>summary{list-style:none;cursor:pointer;border:1px solid #cbd5e1;border-radius:8px;padding:5px 10px;font-size:12.5px;background:#fff;color:#334155;white-space:nowrap}
+.dd>summary::-webkit-details-marker{display:none}.dd>summary::after{content:" ▾";color:var(--m)}
+.dd.sel>summary{background:var(--n);color:#fff;border-color:var(--n)}.dd.sel>summary::after{color:#fff}
+.dd .lst{position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 12px 28px #0f172a33;max-height:330px;overflow:auto;min-width:240px;max-width:min(420px,86vw);padding:6px}
+.dd label{display:flex;gap:8px;align-items:flex-start;padding:5px 6px;border-radius:6px;font-size:12.5px;cursor:pointer}
+.dd label:hover{background:#f1f5f9}.dd label span{flex:1}.dd label i{font-style:normal;color:var(--m)}
+.tg{border:1px solid #cbd5e1;border-radius:99px;background:#fff;color:#334155;padding:4px 10px;font-size:12px;cursor:pointer}
+.tg.on{background:#dbeafe;border-color:#2376a8;color:#0b1f3a;font-weight:600}
+#gr-txt{border:1px solid #cbd5e1;border-radius:8px;padding:5px 10px;font-size:12.5px;width:170px}
+#gr-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:12px;align-items:center}
+#gr-chips .ch{background:#0b1f3a;color:#fff;border:0;border-radius:99px;padding:3px 10px;cursor:pointer;font-size:12px;max-width:100%}
+.gk{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.gk>button,.gk>div{background:#fff;border:1px solid var(--l);border-radius:12px;padding:10px 12px;text-align:left;min-width:0;font:inherit;color:inherit}
+.gk>button{cursor:pointer}.gk>button:hover{border-color:#2376a8}.gk>.on{outline:2px solid #0b1f3a}
+.gk .v{font-size:24px;font-weight:700;color:var(--n);line-height:1.15}.gk .r{font-size:12px;color:var(--m);display:flex;align-items:center;gap:6px}
+.gk .dup{grid-column:span 2}
+.mt{height:8px;border-radius:4px;background:#e2e8f0;margin:3px 0 1px;overflow:hidden}.mt i{display:block;height:100%;border-radius:4px}
+.gg{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+.gg>.card{margin:0;min-width:0}.c4{grid-column:span 4}.c6{grid-column:span 6}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.gg h3{margin:0;font-size:14.5px;color:var(--n)}
+.gg .cab{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.gg .cab .esp{flex:1}
+.gg .cab select{border:1px solid #cbd5e1;border-radius:8px;padding:3px 6px;font-size:12px;max-width:170px;background:#fff}
+.leg{display:flex;gap:4px 12px;flex-wrap:wrap;font-size:11.5px;color:#475569;margin-bottom:6px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none;vertical-align:-1px}
+.br{display:grid;grid-template-columns:minmax(96px,30%) 1fr 40px 24px;gap:8px;align-items:center;padding:2px 0;cursor:pointer;border-radius:6px}
+.br:hover{background:#f8fafc}.br.off{opacity:.35}
+.br .n{font-size:12.5px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1e293b}
+.br.sl .n{font-weight:700}
+.br .t{display:flex;gap:2px;height:18px;min-width:0}
+.br .t i{font-style:normal;height:100%;font-size:11px;line-height:18px;text-align:center;color:#fff;overflow:hidden;min-width:2px}
+.br .t i:last-child{border-radius:0 4px 4px 0}
+.br .t i.esc{color:#1e293b}
+.br .q{font-size:12.5px;font-weight:600;color:#1e293b}
+.br .dr{border:0;background:none;color:#2376a8;cursor:pointer;font-size:15px;padding:0;line-height:1}
+.mais{border:0;background:none;color:#2376a8;cursor:pointer;font-size:12.5px;padding:6px 0}
+.cols{display:flex;gap:6px;align-items:flex-end;overflow-x:auto;padding-top:4px}
+.co{flex:1 1 0;min-width:34px;max-width:70px;cursor:pointer;text-align:center;border-radius:6px}.co:hover{background:#f8fafc}.co.off{opacity:.35}
+.co .p{height:170px;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;align-items:center}
+.co .p i{width:24px;display:block;min-height:2px;flex:none}.co .p i:first-of-type{border-radius:4px 4px 0 0}
+.co .p b{font-size:11.5px;color:#1e293b;font-weight:600}
+.co .l{font-size:11px;color:var(--m);border-top:1px solid #cbd5e1;padding-top:4px;white-space:nowrap}
+.co.sl .l{font-weight:700;color:var(--n)}
+.dm{display:grid;grid-template-columns:minmax(96px,30%) 1fr 108px;gap:8px;align-items:center;padding:3px 0;cursor:pointer;border-radius:6px;font-size:12.5px}
+.dm:hover{background:#f8fafc}.dm.off{opacity:.35}.dm .n{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm .t{position:relative;height:16px;background:linear-gradient(#e2e8f0,#e2e8f0) 0 50%/100% 1px no-repeat}
+.dm .t u{position:absolute;top:6px;height:4px;border-radius:2px;text-decoration:none}
+.dm .t i{position:absolute;top:2px;width:12px;height:12px;border-radius:50%;margin-left:-6px;border:2px solid #fff}
+.dm .t i.e{background:#64748b}.dm .d{font-size:11.5px;color:#334155;white-space:nowrap}
+.mx{overflow:auto;max-height:520px}.mx table{border-collapse:separate;border-spacing:2px;font-size:12px}
+.mx th{font-weight:600;color:#475569;padding:4px 6px;text-align:center;background:#fff;position:sticky;top:0;z-index:2;max-width:120px;font-size:11.5px}
+.mx tr>:first-child{text-align:right;position:sticky;left:0;background:#fff;z-index:1;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;padding-right:8px;color:#1e293b}
+.mx thead tr>:first-child{z-index:3}
+.mx td.c{min-width:52px;text-align:center;border-radius:4px;padding:5px 6px;cursor:pointer}.mx td.c:hover{outline:2px solid #0b1f3a}
+.mx .tt2{font-weight:700;color:#1e293b;background:#f1f5f9;border-radius:4px;text-align:center;padding:5px 6px}
+#gr-tip{position:fixed;z-index:60;pointer-events:none;background:#0b1f3a;color:#fff;font-size:12px;line-height:1.45;border-radius:8px;padding:7px 10px;max-width:320px;white-space:pre-line;display:none;box-shadow:0 8px 20px #0f172a44}
+.gsit{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+@media (max-width:1100px){.gk{grid-template-columns:repeat(4,minmax(0,1fr))}.c4,.c6,.c8{grid-column:span 12}}
+@media (max-width:700px){
+  #grafico{padding:0 8px 40px}#grafico .barra{position:static}
+  .gk{grid-template-columns:repeat(2,minmax(0,1fr))}.gk .v{font-size:20px}
+  .br{grid-template-columns:34% 1fr 34px 20px;gap:6px;padding:4px 0}.dm{grid-template-columns:34% 1fr;padding:5px 0}.dm .d{grid-column:2}
+  .br .n,.dm .n{white-space:normal;line-height:1.2}
+  #gr-lista{overflow-x:auto}#gr-lista table{min-width:720px}
+  .mx tr>:first-child{max-width:130px}
+  .dd .lst{position:fixed;left:8px;right:8px;top:auto;bottom:8px;max-height:60vh;max-width:none}
+}
 @media (max-width:700px){.top h1{font-size:14px}.abas{overflow-x:auto;scrollbar-width:none;padding:8px 8px 0}.aba{padding:8px 8px;font-size:12px;white-space:nowrap;flex:none}#premissas{padding:12px 8px 40px}}
 </style>
 </head>
@@ -104,6 +176,7 @@ table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
 <div class="abas">
   <button class="aba on" data-aba="geral">Geral</button>
   <button class="aba" data-aba="processo">Por processo</button>
+  <button class="aba" data-aba="painel">Painel gráfico</button>
   <button class="aba" data-aba="resumo">Lançamentos do dia e PPT</button>
   <button class="aba" data-aba="premissas">Premissas</button>
 </div>
@@ -111,6 +184,7 @@ table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
   <div class="vazio" id="vazio">Carregando…</div>
   <iframe id="fr-geral" title="Geral"></iframe>
   <iframe id="fr-processo" title="Por processo"></iframe>
+  <div id="grafico"></div>
   <div id="resumo"></div>
   <div id="premissas"></div>
 </div>
@@ -244,8 +318,10 @@ function mostra(a){
   document.querySelectorAll(".aba").forEach(b => b.classList.toggle("on", b.dataset.aba===a));
   $("#fr-geral").classList.toggle("on", a==="geral" && !!pac);
   $("#fr-processo").classList.toggle("on", a==="processo" && !!pac);
+  $("#grafico").classList.toggle("on", a==="painel" && !!pac);
   $("#resumo").classList.toggle("on", a==="resumo" && !!pac);
   $("#premissas").classList.toggle("on", a==="premissas" && !!pac);
+  if (a==="painel") desenhaPainel();
   if (a==="resumo") desenhaResumo();
   if (a==="premissas") desenhaPremissas();
 }
@@ -372,6 +448,7 @@ function remarcaTudo(){
   // não redesenha a aba enquanto alguém digita nela (senão o texto some)
   const digitando = document.activeElement && $("#resumo").contains(document.activeElement);
   if (abaAtual==="resumo" && !digitando) desenhaResumo();
+  if (abaAtual==="painel") desenhaPainel();
   if (abaAtual==="premissas") desenhaPremissas();
   if (atAberta) desenhaOutros(atAberta);
 }
@@ -546,6 +623,7 @@ function htmlFechamento(){
       <textarea data-nota="g" data-chave="leitura" placeholder="Ex.: pactuar responsáveis e novas datas para as vencidas de Alto/Crítico.">${esc(gl ? gl.dados.texto : "")}</textarea>
       <div class="small">${gl ? "Última edição: " + esc(gl.dados.nome_autor || gl.autor) + ", " + esc(hora(gl.atualizado_em)) : ""}</div></div>
     <div class="campo"><label for="f-modo">Tabelas de atividades no PPT</label><select id="f-modo"><option value="atraso">Enxuto: uma lista por tipo (vencidas, bloqueadas, inícios atrasados), da mais atrasada para a menos, com a coluna Processo</option><option value="processo">Por processo: um bloco de slides para cada processo (bem mais slides)</option></select></div>
+    <div class="campo"><label for="f-er">Slide “realizado × esperado” no PPT</label><select id="f-er"><option value="proc">Por processo</option><option value="tema">Por tema (o Monday não tem campo de squad; tema é o agrupamento acima do processo)</option></select></div>
     <button class="pri" id="bt-ppt2" type="button">Exportar PPT</button> <span class="small" id="ppt-msg"></span></div>`;
   h += `<div class="card"><h2>Diagnóstico por processo com vencidas</h2><table class="ls"><thead><tr><th style="width:22%">Processo</th><th>Diagnóstico (problema, risco e solução)</th><th style="width:30%">O que destrava</th><th></th></tr></thead><tbody>`;
   h += procs.map(p => {
@@ -557,18 +635,25 @@ function htmlFechamento(){
       <td class="small">${nt ? esc(d.nome_autor || nt.autor) + "<br>" + esc(hora(nt.atualizado_em)) : ""}</td></tr>`;
   }).join("");
   h += `</tbody></table><div class="small" style="margin-top:6px">Salva sozinho ao sair do campo. Vale a última versão de cada processo, de quem editou por último.</div></div>`;
+  h += `<div class="card"><h2>Pareto das justificativas: “o que compõe”</h2><div class="small">O texto cinza é montado sozinho, pelas justificativas do dia. Escreva por cima só se quiser outro texto no slide; apague para voltar ao automático.</div><table class="ls"><thead><tr><th style="width:16%">Base</th><th style="width:22%">Causa</th><th style="width:6%">Nº</th><th>O que compõe</th></tr></thead><tbody>`;
+  h += [["v","Vencidas",pareto(rg.ven)],["i","Inícios atrasados",pareto(rg.ini)]].map(([k, nm, P]) => P.map(r => {
+    const nt = notaDe("c", k + "|" + r.causa), tx = nt ? nt.dados.texto || "" : "";
+    return `<tr><td>${nm}</td><td><b>${esc(r.causa)}</b></td><td>${r.n}</td><td><textarea data-nota="c" data-chave="${esc(k + "|" + r.causa)}" rows="2" style="width:100%" placeholder="${esc(r.comp)}">${esc(tx)}</textarea></td></tr>`;
+  }).join("")).join("") || `<tr><td colspan="4" class="small">Nenhuma vencida nem início atrasado.</td></tr>`;
+  h += `</tbody></table></div>`;
   return h;
 }
 function ligaFechamento(){
   const b = $("#bt-ppt2"); if (b) b.onclick = gerarPPT;
   const sm = $("#f-modo"); if (sm){ sm.value = modoTabelas(); sm.onchange = () => { try{ localStorage.setItem("logistica-ppt-modo", sm.value); }catch(e){} }; }
+  const se = $("#f-er"); if (se){ se.value = modoER(); se.onchange = () => { try{ localStorage.setItem("logistica-ppt-er", se.value); }catch(e){} }; }
   $("#resumo").querySelectorAll("textarea[data-nota]").forEach(t => t.addEventListener("change", () => salvaNota(t)));
 }
 async function salvaNota(t){
   const tipo = t.dataset.nota, chave = t.dataset.chave;
   const atual = notaDe(tipo, chave);
   const dados = Object.assign({}, atual ? atual.dados : {}, { tipo, ref: pac.ref, chave, nome_autor: nomeAutor() });
-  if (tipo === "g") dados.texto = t.value.trim();
+  if (tipo === "g" || tipo === "c") dados.texto = t.value.trim();
   else {
     $("#resumo").querySelectorAll(`textarea[data-nota="p"]`).forEach(o => { if (o.dataset.chave === chave) dados[o.dataset.campo] = o.value.trim(); });
   }
@@ -585,10 +670,268 @@ async function salvaNota(t){
   }catch(err){ console.error(err); t.style.borderColor = "#dc2626"; alert("Não salvou: " + (err.message||err)); }
 }
 
+/* ---------- aba "Painel gráfico" (24/11/2026): painel interativo sobre a mesma régua ----------
+   Clicar em barra, coluna, célula ou cartão filtra todo o resto. Cada gráfico ignora o filtro da
+   própria dimensão (mostra o que foi escolhido em destaque e o resto apagado). */
+const SITS = [["Vencida","#c0262d"],["Bloqueada vencida","#6250d6"],["Início atrasado","#e8771a"],["Alerta","#f2b705"],["No prazo","#2376a8"],["Concluída","#3f8f3a"]];
+const COR = {
+  sit: Object.fromEntries(SITS),
+  st:  { "Concluído":"#3f8f3a","Em Andamento":"#2376a8","Não Iniciado":"#94a3b8","Bloqueado":"#6250d6" },
+  imp: { "Crítico":"#7b0d1e","Alto":"#c0262d","Médio":"#f2b705","Baixo":"#3f8f3a","(sem criticidade)":"#94a3b8" }
+};
+const ESCURO = new Set(["#f2b705","#94a3b8","#e8771a"]);       // fundo claro: número escuro por cima
+const ORD = {
+  sit: SITS.map(x => x[0]), st: ["Concluído","Em Andamento","Não Iniciado","Bloqueado"],
+  imp: ["Crítico","Alto","Médio","Baixo","(sem criticidade)"],
+  fase: ["Pré-Closing","D+1","D+30","D+60","D+90","D+100","D+180","D+210","D+365"],
+  prazo: ["Já venceu","Até 15 dias","16 a 45 dias","46 a 90 dias","Mais de 90 dias","Sem prazo","Concluída"],
+  aging: ["Até 15 dias","16 a 30 dias","Mais de 30 dias"]
+};
+const DIM = {
+  pessoa:"Pessoa", tema:"Tema", proc:"Processo", pai:"Atividade principal", sit:"Situação", st:"Status", imp:"Criticidade",
+  prazo:"Prazo", fase:"Fase", mes:"Mês do fim (baseline)", causa:"Justificativa", aging:"Dias de atraso", area:"Área executora", etapa:"Etapa"
+};
+const CADEIA = ["tema","proc","pai"];
+const PAPEIS = [["ex","Executor"],["env","Envolvido"],["atu","Atualizador"]];
+const G = { f:{}, papel:new Set(["ex","env","atu"]), txt:"", abertas:false, dim:"proc", cor:"sit", ord:"total", todos:false,
+            dimER:"proc", par:"v", lin:"pessoa", col:"sit", nLista:50, dados:[], gerado:"" };
+const semQ = s => String(s||"").replace(/^"|"$/g,"");
+const vazio = '<div class="small">Nada com os filtros atuais.</div>';
+const corDif = v => v.r - v.e >= -0.0005 ? "#3f8f3a" : v.r - v.e > -0.1 ? "#e8771a" : "#c0262d";
+const legenda = (c, cs) => '<div class="leg">' + cs.map(x => `<span><span class="sw" style="background:${COR[c][x]}"></span> ${x}</span>`).join("") + "</div>";
+// causa principal declarada: o prefixo da justificativa vigente (site ou Monday)
+const SEM_JUST = "Sem justificativa", SEM_PREF = "Fora do formato (sem prefixo)";
+function causaDe(a){ const j = limpa(justDe(a)); if (!j) return SEM_JUST; return separaJust(j).p || SEM_PREF; }
+const impDe = a => /^Crítico/.test(a.imp||"") ? "Crítico" : (a.imp || "(sem criticidade)");
+function preparaPainel(){
+  const rg = regua(), R = rg.R, m = new Map();
+  rg.ven.forEach(a => m.set(a.at, ["Vencida", a.atraso])); rg.blo.forEach(a => m.set(a.at, ["Bloqueada vencida", a.atraso])); rg.ini.forEach(a => m.set(a.at, ["Início atrasado", a.atraso]));
+  G.dados = rg.base.map(a => {
+    const fim = a.bf || a.cf, df = fim ? dias(d8(fim), R) : null, ab = a.st !== "Concluído", x = m.get(a.at), p = parseFloat(String(a.pr||"0")) || 0;
+    const sit = !ab ? "Concluída" : x ? x[0] : (df !== null && df <= 7 && p === 0 ? "Alerta" : "No prazo");
+    const venc = sit === "Vencida" || sit === "Bloqueada vencida";
+    let es = null; const s = d8(a.bi), e = d8(a.bf);
+    if (s && e && e > s){ const sh = dias(R, s) - 1, sf = dias(e, s); es = sh > sf ? 1 : (sh < 0 ? 0 : sh/sf); }
+    return { a, sit, ab, atraso:x ? x[1] : 0, p, es, fim, v:{
+      tema:a.tema||"(sem tema)", proc:semQ(a.proc)||"(sem processo)", pai:a.pai||"(sem principal)", sit, st:a.st||"(sem status)", imp:impDe(a),
+      fase:a.fase||"(sem fase)", area:a.area||"(sem área)", etapa:a.etapa||"(sem etapa)", mes:fim ? fim.slice(0,7) : "(sem data)",
+      prazo:!ab ? "Concluída" : df===null ? "Sem prazo" : df<=0 ? "Já venceu" : df<=15 ? "Até 15 dias" : df<=45 ? "16 a 45 dias" : df<=90 ? "46 a 90 dias" : "Mais de 90 dias",
+      causa:(venc || sit==="Início atrasado") ? causaDe(a) : "", aging:venc ? (x[1]<=15 ? "Até 15 dias" : x[1]<=30 ? "16 a 30 dias" : "Mais de 30 dias") : "" },
+      pes:Object.fromEntries(PAPEIS.map(([k]) => [k, String(a[k]||"").split(",").map(s => s.trim()).filter(Boolean)])) };
+  });
+}
+function vals(o, d){
+  if (d === "pessoa"){ const s = new Set(); G.papel.forEach(k => o.pes[k].forEach(n => s.add(n))); return s.size ? [...s] : ["(sem pessoa)"]; }
+  return o.v[d] ? [o.v[d]] : [];
+}
+function passa(o, menos){
+  if (G.abertas && !o.ab) return false;
+  if (G.txt && !(o.a.at + " " + o.a.nome + " " + o.a.pai).toLowerCase().includes(G.txt.toLowerCase())) return false;
+  for (const d in G.f){ if (d === menos || !G.f[d].size) continue; if (!vals(o, d).some(x => G.f[d].has(x))) return false; }
+  return true;
+}
+const filtra = menos => G.dados.filter(o => passa(o, menos));
+function agrupa(lista, d){
+  const m = new Map(); lista.forEach(o => vals(o, d).forEach(x => { if (!m.has(x)) m.set(x, []); m.get(x).push(o); }));
+  return m;
+}
+const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const rotulo = (d, x) => d === "mes" && /^\d{4}-\d\d$/.test(x) ? MES[+x.slice(5)-1] + "/" + x.slice(2,4) : x;
+function ordena(chaves, d, tam){
+  if (ORD[d]){ const i = x => { const k = ORD[d].indexOf(x); return k < 0 ? 99 : k; }; return chaves.sort((x,y) => i(x)-i(y)); }
+  if (d === "mes") return chaves.sort();
+  return chaves.sort((x,y) => tam(y)-tam(x) || x.localeCompare(y));
+}
+const pc1 = x => (100*x).toFixed(1).replace(".",",") + "%";
+const sinal = x => (x < 0 ? "−" + Math.abs(x) : "+" + x);
+function avanco(l){ let e = 0, r = 0, n = 0; l.forEach(o => { if (o.es === null) return; e += o.es; r += o.p/100; n++; }); return n ? { e:e/n, r:r/n, n } : null; }
+const conta = (l, s) => l.filter(o => o.sit === s).length;
+const problema = l => l.filter(o => ["Vencida","Bloqueada vencida","Início atrasado"].includes(o.sit)).length;   // ordem "mais atraso"
+
+function desenhaPainel(){
+  if (!pac) return;
+  preparaPainel();
+  if (G.gerado !== String(pac.gerado) || !$("#gr-corpo")){ esqueletoPainel(); G.gerado = String(pac.gerado); }
+  pintaPainel();
+}
+const FILTROS = ["pessoa","tema","proc","pai","sit","st","imp","prazo","fase","mes","causa","area","etapa"];
+function limpaPainel(){ G.f = {}; G.txt = ""; $("#gr-txt").value = ""; G.abertas = false; PAPEIS.forEach(p => G.papel.add(p[0])); pintaPainel(); }
+function esqueletoPainel(){
+  const ops = l => l.map(k => `<option value="${k}">${esc(DIM[k])}</option>`).join("");
+  const sel = (c, l, r) => `<select data-c="${c}" aria-label="${r}">${l}</select>`;
+  $("#grafico").innerHTML = `
+  <div class="barra"><div class="fl">
+    ${FILTROS.map(d => `<details class="dd" data-d="${d}"><summary>${esc(DIM[d])}</summary><div class="lst"></div></details>${d==="pessoa" ? `<span class="small">como</span>` + PAPEIS.map(([k,r]) => `<button class="tg" type="button" data-papel="${k}">${r}</button>`).join("") : ""}`).join("")}
+    <input id="gr-txt" type="search" placeholder="Buscar ID ou texto" aria-label="Buscar ID ou texto">
+    <button class="tg" type="button" id="gr-ab">Só abertas</button>
+    <button class="sec" type="button" id="gr-limpa" style="padding:4px 12px;font-size:12.5px">Limpar tudo</button>
+  </div><div id="gr-chips"></div></div>
+  <div id="gr-corpo">
+    <div class="gk" id="gr-kpi"></div>
+    <div class="gg">
+      <div class="card c4"><div class="cab"><h3>Situação</h3></div><div data-g="b-sit"></div></div>
+      <div class="card c4"><div class="cab"><h3>Status</h3></div><div data-g="b-st"></div></div>
+      <div class="card c4"><div class="cab"><h3>Criticidade</h3></div><div data-g="b-imp"></div></div>
+      <div class="card c12"><div class="cab"><h3>Atividades por</h3>${sel("dim", ops(["tema","proc","pai","pessoa","fase","area","etapa","prazo"]), "Agrupar por")}
+        <span class="small">cor</span>${sel("cor", ops(["sit","st","imp"]), "Cor por")}
+        <span class="small">ordem</span>${sel("ord", '<option value="total">mais atividades</option><option value="prob">mais atraso</option><option value="nome">nome</option>', "Ordem")}
+        <span class="esp"></span><button class="tg" type="button" id="gr-sobe" style="display:none">⤴ voltar um nível</button></div><div data-g="rank"></div></div>
+      <div class="card c6"><div class="cab"><h3>Esperado × realizado por</h3>${sel("dimER", ops(["tema","proc","pai","pessoa","fase"]), "Agrupar por")}</div><div data-g="er"></div></div>
+      <div class="card c6"><div class="cab"><h3>Pareto das justificativas</h3>${sel("par", '<option value="v">Vencidas</option><option value="b">Bloqueadas vencidas</option><option value="i">Inícios atrasados</option>', "Base do Pareto")}</div><div data-g="par"></div></div>
+      <div class="card c8"><div class="cab"><h3>Fim da baseline por mês</h3></div><div data-g="mes"></div></div>
+      <div class="card c4"><div class="cab"><h3>Há quantos dias venceu</h3></div><div data-g="aging"></div></div>
+      <div class="card c12"><div class="cab"><h3>Cruzamento</h3>${sel("lin", ops(["pessoa","tema","proc","pai","fase","area","etapa","imp","st","sit","mes"]), "Linhas")}<span class="small">×</span>${sel("col", ops(["sit","st","imp","prazo","fase","mes","tema","proc","pessoa","causa"]), "Colunas")}<span class="small">clique na célula para filtrar os dois</span></div><div class="mx" data-g="mx"></div></div>
+      <div class="card c12"><div class="cab"><h3 id="gr-lt">Atividades</h3><span class="small">clique na linha para lançar comentário, justificativa ou %</span></div><div id="gr-lista"></div></div>
+    </div>
+  </div>`;
+  const g = $("#grafico");
+  if (!$("#gr-tip")){ const t = document.createElement("div"); t.id = "gr-tip"; document.body.appendChild(t); }
+  g.querySelectorAll(".dd").forEach(dd => dd.addEventListener("toggle", () => { if (dd.open){ g.querySelectorAll(".dd[open]").forEach(o => { if (o !== dd) o.open = false; }); listaDD(dd); } }));
+  g.querySelectorAll("[data-papel]").forEach(b => b.onclick = () => { const k = b.dataset.papel; G.papel.has(k) ? G.papel.delete(k) : G.papel.add(k); if (!G.papel.size) PAPEIS.forEach(p => G.papel.add(p[0])); pintaPainel(); });
+  g.querySelectorAll("select[data-c]").forEach(s => { s.value = G[s.dataset.c]; s.onchange = () => { G[s.dataset.c] = s.value; if (s.dataset.c==="dim") G.todos = false; pintaPainel(); }; });
+  $("#gr-txt").value = G.txt; $("#gr-txt").oninput = e => { G.txt = e.target.value.trim(); pintaPainel(); };
+  $("#gr-ab").onclick = () => { G.abertas = !G.abertas; pintaPainel(); };
+  $("#gr-limpa").onclick = limpaPainel;
+  $("#gr-sobe").onclick = () => { const i = CADEIA.indexOf(G.dim); if (i > 0){ G.f[CADEIA[i-1]] = new Set(); G.f[G.dim] = new Set(); mudaDim(CADEIA[i-1]); } };
+}
+function mudaDim(d){ G.dim = d; G.todos = false; $("#grafico").querySelector('select[data-c="dim"]').value = d; pintaPainel(); }
+// filtra pelos dois lados de uma vez (segmento da barra, célula do cruzamento); clicar de novo desfaz
+function parFiltro(d1, x, d2, y){
+  const a = G.f[d1], b = G.f[d2], ja = a && b && a.size===1 && a.has(x) && b.size===1 && b.has(y);
+  G.f[d1] = ja ? new Set() : new Set([x]); if (d2 !== d1) G.f[d2] = ja ? new Set() : new Set([y]);
+  G.nLista = 50; pintaPainel();
+}
+function toggle(d, x){ const s = G.f[d] || (G.f[d] = new Set()); s.has(x) ? s.delete(x) : s.add(x); G.nLista = 50; pintaPainel(); }
+$("#grafico").addEventListener("click", e => {
+  const el = e.target; let x;
+  if (!el.closest(".dd")) $("#grafico").querySelectorAll(".dd[open]").forEach(o => o.open = false);
+  if ((x = el.closest("[data-drill]"))){
+    const i = CADEIA.indexOf(G.dim); G.f[G.dim] = new Set([x.dataset.drill]);
+    if (i >= 0 && i < CADEIA.length-1) mudaDim(CADEIA[i+1]); else { pintaPainel(); $("#gr-lt").scrollIntoView({ behavior:"smooth", block:"center" }); }
+  } else if ((x = el.closest("[data-tira]"))){
+    const [d, ...r] = x.dataset.tira.split("|");
+    if (d==="*txt"){ G.txt = ""; $("#gr-txt").value = ""; } else if (d==="*ab") G.abertas = false; else G.f[d].delete(r.join("|"));
+    pintaPainel();
+  } else if ((x = el.closest("[data-abre]"))) abre(x.dataset.abre);
+  else if ((x = el.closest("[data-cel]"))){ const [p, q] = JSON.parse(x.dataset.cel); parFiltro(G.lin, p, G.col, q); }
+  else if ((x = el.closest("[data-seg]"))) parFiltro(...JSON.parse(x.dataset.seg));
+  else if ((x = el.closest("[data-fx]"))){ const [d, ...r] = x.dataset.fx.split("|"); toggle(d, r.join("|")); }
+  else if (el.id === "gr-todos"){ G.todos = !G.todos; pintaPainel(); }
+  else if (el.id === "gr-mais"){ G.nLista += 100; pintaPainel(); }
+});
+$("#grafico").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("[tabindex][data-fx],[tabindex][data-cel]")) e.target.click(); });
+$("#grafico").addEventListener("change", e => { const c = e.target; if (c.matches(".dd input[type=checkbox]")) toggle(c.closest(".dd").dataset.d, c.value); });
+$("#grafico").addEventListener("pointermove", e => {
+  const t = $("#gr-tip"); if (!t) return; const el = e.target.closest("[data-tip]");
+  if (!el || e.pointerType === "touch"){ t.style.display = "none"; return; }
+  t.textContent = el.dataset.tip; t.style.display = "block";
+  t.style.left = Math.min(e.clientX + 14, innerWidth - t.offsetWidth - 8) + "px"; t.style.top = Math.min(e.clientY + 16, innerHeight - t.offsetHeight - 8) + "px";
+});
+$("#grafico").addEventListener("pointerleave", () => { const t = $("#gr-tip"); if (t) t.style.display = "none"; });
+function listaDD(dd){
+  const d = dd.dataset.d, m = agrupa(filtra(d), d), s = G.f[d] || new Set(), lst = dd.querySelector(".lst");
+  s.forEach(x => { if (!m.has(x)) m.set(x, []); });
+  const ks = ["pessoa","pai","proc","tema"].includes(d) ? [...m.keys()].sort((x,y) => x.localeCompare(y)) : ordena([...m.keys()], d, x => m.get(x).length);
+  const sc = lst.scrollTop;
+  lst.innerHTML = ks.map(x => `<label><input type="checkbox" value="${esc(x)}"${s.has(x)?" checked":""}><span>${esc(rotulo(d,x))}</span><i>${m.get(x).length}</i></label>`).join("") || vazio;
+  lst.scrollTop = sc;
+}
+function dica(nome, l){
+  const av = avanco(l), p = [["Vencida","vencidas"],["Bloqueada vencida","bloqueadas vencidas"],["Início atrasado","inícios atrasados"],["Alerta","em alerta"]].map(([s,r]) => [conta(l,s), r]).filter(x => x[0]).map(x => x.join(" "));
+  return nome + "\n" + l.length + " atividades · " + conta(l,"Concluída") + " concluídas" + (p.length ? "\n" + p.join(" · ") : "") + (av ? "\nEsperado " + pc1(av.e) + " × realizado " + pc1(av.r) : "");
+}
+function pintaPainel(){
+  const g = $("#grafico"), tot = filtra(), el = k => g.querySelector(`[data-g="${k}"]`), tem = d => (G.f[d] && G.f[d].size) || 0;
+  const cls = (d, x) => tem(d) ? (G.f[d].has(x) ? "sl" : "off") : "";
+  const attr = (d, x, t) => `tabindex="0" data-fx="${esc(d+"|"+x)}" data-tip="${esc(t)}"`;
+  g.querySelectorAll(".dd").forEach(dd => { const d = dd.dataset.d, n = tem(d); dd.classList.toggle("sel", n > 0); dd.querySelector("summary").textContent = DIM[d] + (n ? " (" + n + ")" : ""); if (dd.open) listaDD(dd); });
+  g.querySelectorAll("[data-papel]").forEach(b => b.classList.toggle("on", G.papel.has(b.dataset.papel)));
+  $("#gr-ab").classList.toggle("on", G.abertas);
+  const chips = [], chip = (k, t) => chips.push(`<button class="ch" type="button" data-tira="${esc(k)}">${esc(t)} ✕</button>`);
+  for (const d in G.f) G.f[d].forEach(x => chip(d+"|"+x, DIM[d] + ": " + rotulo(d,x)));
+  if (G.txt) chip("*txt|", "Busca: " + G.txt);
+  if (G.abertas) chip("*ab|", "Só abertas");
+  $("#gr-chips").innerHTML = chips.length ? chips.join("") + `<span class="small">${tot.length} de ${G.dados.length} atividades</span>` : `<span class="small">Sem filtro: ${G.dados.length} atividades. Clique em qualquer gráfico para filtrar os outros.</span>`;
+  // cartões
+  const av = avanco(tot), cart = (x, r) => { const n = filtra("sit").filter(o => o.sit === x).length; return `<button type="button" data-fx="sit|${x}" class="${tem("sit") && G.f.sit.has(x) ? "on" : ""}"><div class="v">${n}</div><div class="r"><span class="sw" style="background:${COR.sit[x]}"></span>${r}</div></button>`; };
+  const nSit = filtra("sit").length;
+  $("#gr-kpi").innerHTML = `<div><div class="v">${tot.length}</div><div class="r">atividades</div></div>`
+    + cart("Concluída", "concluídas" + (nSit ? " · " + pc1(conta(filtra("sit"),"Concluída")/nSit) : "")) + cart("Vencida","vencidas") + cart("Bloqueada vencida","bloqueadas vencidas") + cart("Início atrasado","inícios atrasados") + cart("Alerta","em alerta")
+    + `<div class="dup">${av ? `<div class="r">Esperado <b style="color:#1e293b">${pc1(av.e)}</b></div><div class="mt"><i style="width:${100*av.e}%;background:#64748b"></i></div><div class="r">Realizado <b style="color:#1e293b">${pc1(av.r)}</b><span>${sinal(+(100*(av.r-av.e)).toFixed(1)).replace(".",",")} p.p.</span></div><div class="mt"><i style="width:${100*av.r}%;background:${corDif(av)}"></i></div>` : '<div class="r">Sem duração para esperado × realizado.</div>'}</div>`;
+  // barras simples
+  ["sit","st","imp"].forEach(d => {
+    const m = agrupa(filtra(d), d), ks = ordena([...m.keys()], d), mx = Math.max(1, ...ks.map(x => m.get(x).length));
+    el("b-"+d).innerHTML = ks.map(x => { const l = m.get(x); return `<div class="br ${cls(d,x)}" ${attr(d,x,dica(x,l))}><span class="n">${esc(x)}</span><span class="t"><i style="width:${100*l.length/mx}%;background:${COR[d][x]||"#94a3b8"}"></i></span><span class="q">${l.length}</span><span></span></div>`; }).join("") || vazio;
+  });
+  // ranking empilhado, com drill Tema > Processo > Atividade principal > lista
+  {
+    const d = G.dim, c = G.cor, m = agrupa(filtra(d), d), tam = x => m.get(x).length; let ks = [...m.keys()];
+    if (ORD[d] && G.ord === "total") ks = ordena(ks, d, tam);
+    else ks.sort((x,y) => (G.ord==="nome" ? 0 : G.ord==="prob" ? problema(m.get(y))-problema(m.get(x)) || tam(y)-tam(x) : tam(y)-tam(x)) || x.localeCompare(y));
+    const nT = ks.length, LIM = 18; if (!G.todos) ks = ks.slice(0, LIM);
+    const mx = Math.max(1, ...ks.map(tam)), cs = ORD[c], i = CADEIA.indexOf(d);
+    const seg = (x, l) => cs.map(y => { const n = l.filter(o => o.v[c]===y).length; return n ? `<i class="${ESCURO.has(COR[c][y])?"esc":""}" style="width:${100*n/mx}%;background:${COR[c][y]}" data-seg="${esc(JSON.stringify([d,x,c,y]))}" data-tip="${esc(rotulo(d,x)+"\n"+y+": "+n+" de "+l.length+" ("+pc1(n/l.length)+")\nClique para filtrar os dois")}">${n}</i>` : ""; }).join("");
+    el("rank").innerHTML = ks.length ? legenda(c, cs) + ks.map(x => { const l = m.get(x);
+      return `<div class="br ${cls(d,x)}" ${attr(d,x,dica(rotulo(d,x),l))}><span class="n">${esc(rotulo(d,x))}</span><span class="t">${seg(x,l)}</span><span class="q">${l.length}</span>${i >= 0 ? `<button class="dr" type="button" data-drill="${esc(x)}" data-tip="${i === 2 ? "Ver a lista de atividades" : "Abrir por " + DIM[CADEIA[i+1]].toLowerCase()}" aria-label="Detalhar">⤵</button>` : "<span></span>"}</div>`; }).join("")
+      + (nT > LIM ? `<button class="mais" id="gr-todos" type="button">${G.todos ? "Mostrar menos" : "Mostrar todos (" + nT + ")"}</button>` : "") : vazio;
+    $("#gr-sobe").style.display = i > 0 ? "" : "none";
+  }
+  // esperado x realizado
+  {
+    const d = G.dimER, ls = [...agrupa(filtra(d), d).entries()].map(([x,l]) => [x, l, avanco(l)]).filter(r => r[2]).sort((p,q) => (p[2].r-p[2].e)-(q[2].r-q[2].e));
+    const bola = (c, t) => `<span><span class="sw" style="background:${c};border-radius:50%"></span> ${t}</span>`;
+    el("er").innerHTML = '<div class="leg">' + bola("#64748b","esperado") + bola("#3f8f3a","realizado no ritmo") + bola("#e8771a","menos de 10 p.p. abaixo") + bola("#c0262d","10 p.p. ou mais abaixo") + '</div><div style="max-height:430px;overflow:auto">' + (ls.map(([x,l,v]) => {
+      const c = corDif(v), a = Math.min(v.e,v.r), b = Math.max(v.e,v.r);
+      return `<div class="dm ${cls(d,x)}" ${attr(d,x,dica(x,l)+"\nNa conta: "+v.n+" de "+l.length+" (as que têm duração)")}><span class="n">${esc(x)}</span><span class="t" style="margin:0 7px"><u style="left:${100*a}%;width:${100*(b-a)}%;background:${c}55"></u><i class="e" style="left:${100*v.e}%"></i><i style="left:${100*v.r}%;background:${c}"></i></span><span class="d">${Math.round(100*v.r)}% de ${Math.round(100*v.e)}% (${sinal(+(100*(v.r-v.e)).toFixed(1)).replace(".",",")})</span></div>`; }).join("") || vazio) + "</div>";
+  }
+  // pareto
+  {
+    const alvo = { v:["Vencida","vencidas"], b:["Bloqueada vencida","bloqueadas vencidas"], i:["Início atrasado","inícios atrasados"] }[G.par];
+    const P = pareto(filtra("causa").filter(o => o.sit === alvo[0]).map(o => o.a)), mx = Math.max(1, ...P.map(r => r.n)), tt = P.reduce((t,r) => t+r.n, 0); let ac = 0;
+    el("par").innerHTML = P.length ? `<div class="small" style="margin-bottom:6px">${tt} ${alvo[1]}, pela causa declarada na justificativa. À direita, o % acumulado.</div>` + P.map((r, k) => { ac += r.n;
+      return `<div class="br ${cls("causa",r.causa)}" style="grid-template-columns:minmax(110px,36%) 1fr 28px 46px" ${attr("causa",r.causa,r.causa+": "+r.n+"\n"+r.comp)}><span class="n">${esc(r.causa)}</span><span class="t"><i style="width:${100*r.n/mx}%;background:${r.peso ? "#94a3b8" : k ? "#0a4a68" : "#c0262d"}"></i></span><span class="q">${r.n}</span><span class="small">${Math.round(100*ac/tt)}%</span></div>`; }).join("") : vazio;
+  }
+  // colunas: mês e dias de atraso
+  const coluna = (d, ks, m, ss, larg) => { const mx = Math.max(1, ...ks.map(x => (m.get(x)||[]).length));
+    return legenda("sit", ss) + '<div class="cols">' + ks.map(x => { const l = m.get(x) || []; return `<div class="co ${cls(d,x)}" ${larg?'style="max-width:none"':""} ${attr(d,x,dica(rotulo(d,x),l))}><div class="p"><b>${l.length}</b>${ss.slice().reverse().map(y => { const n = conta(l,y); return n ? `<i style="height:${130*n/mx}px;background:${COR.sit[y]}"></i>` : ""; }).join("")}</div><div class="l">${esc(rotulo(d,x))}${d==="mes" && x===pac.ref.slice(0,7) ? " •" : ""}</div></div>`; }).join("") + "</div>"; };
+  { const m = agrupa(filtra("mes"), "mes"); el("mes").innerHTML = m.size ? coluna("mes", [...m.keys()].sort(), m, ORD.sit) + '<div class="small" style="margin-top:6px">• mês da referência</div>' : vazio; }
+  { const m = agrupa(filtra("aging"), "aging"); el("aging").innerHTML = m.size ? coluna("aging", ORD.aging, m, ["Vencida","Bloqueada vencida"], true) : vazio; }
+  // cruzamento
+  {
+    const dl = G.lin, dc = G.col, ml = agrupa(tot, dl), mc = agrupa(tot, dc);
+    const kl = ordena([...ml.keys()], dl, x => ml.get(x).length), kc = ordena([...mc.keys()], dc, x => mc.get(x).length);
+    const M = kl.map(x => kc.map(y => ml.get(x).filter(o => vals(o,dc).includes(y)).length)), mx = Math.max(1, ...M.flat());
+    el("mx").innerHTML = kl.length ? `<table><thead><tr><th>${esc(DIM[dl])}</th>${kc.map(y => `<th>${esc(rotulo(dc,y))}</th>`).join("")}<th>Total</th></tr></thead><tbody>` + kl.map((x,i) => `<tr><td title="${esc(x)}">${esc(rotulo(dl,x))}</td>${kc.map((y,j) => { const n = M[i][j], t = .08 + .82*Math.sqrt(n/mx); return n ? `<td class="c" tabindex="0" style="background:rgba(10,74,104,${t.toFixed(2)});color:${t>.5?"#fff":"#1e293b"}" data-cel="${esc(JSON.stringify([x,y]))}" data-tip="${esc(rotulo(dl,x)+" × "+rotulo(dc,y)+"\n"+n+(n>1?" atividades":" atividade"))}">${n}</td>` : '<td style="text-align:center;color:#cbd5e1">·</td>'; }).join("")}<td class="tt2">${ml.get(x).length}</td></tr>`).join("") + `<tr><td><b>Total</b></td>${kc.map(y => `<td class="tt2">${mc.get(y).length}</td>`).join("")}<td class="tt2">${tot.length}</td></tr></tbody></table>` + (dl==="pessoa"||dc==="pessoa" ? '<div class="small" style="margin-top:4px">Uma atividade com várias pessoas conta para cada uma. O total geral conta cada atividade uma vez.</div>' : "") : vazio;
+  }
+  // lista
+  {
+    const o = [...tot].sort((x,y) => ORD.sit.indexOf(x.sit)-ORD.sit.indexOf(y.sit) || y.atraso-x.atraso || (x.fim||"9").localeCompare(y.fim||"9"));
+    $("#gr-lt").textContent = "Atividades (" + o.length + ")";
+    $("#gr-lista").innerHTML = o.length ? `<table class="ls"><thead><tr><th>ID</th><th style="width:34%">Atividade</th><th>Executor</th><th>Situação</th><th>Status</th><th>%</th><th>Fim (baseline)</th><th>Justificativa</th></tr></thead><tbody>` + o.slice(0,G.nLista).map(x => `<tr class="cl" data-abre="${esc(x.a.at)}"><td><b>${esc(x.a.at)}</b></td><td>${esc(x.a.nome)}<div class="small">${esc(x.v.proc)}</div></td><td>${esc(x.a.ex)}</td><td><span class="gsit"><span class="sw" style="background:${COR.sit[x.sit]}"></span>${x.sit}${x.atraso?" · "+x.atraso+"d":""}</span></td><td>${esc(x.a.st)}</td><td>${esc(x.a.pr)}</td><td style="white-space:nowrap">${x.fim?dbr(x.fim)+(x.a.bf?"":"*"):"—"}</td><td class="small">${x.v.causa ? esc(limpa(justDe(x.a))||"—") : ""}</td></tr>`).join("") + "</tbody></table>" + (o.length > G.nLista ? `<button class="mais" id="gr-mais" type="button">Mostrar mais (${o.length-G.nLista} restantes)</button>` : "") : vazio;
+  }
+  // número dentro do segmento só se couber
+  g.querySelectorAll(".br .t i").forEach(i => { if (i.textContent && i.offsetWidth < 8*i.textContent.length + 8) i.textContent = ""; });
+}
+/* Pareto: conta pela causa declarada (prefixo). "Fora do formato" e "Sem justificativa" vão no fim, porque não são causa. */
+function pareto(lista){
+  const m = new Map(); lista.forEach(a => { const c = causaDe(a); if (!m.has(c)) m.set(c, []); m.get(c).push(a); });
+  return [...m.entries()].map(([causa, l]) => ({ causa, n:l.length, comp:compoe(causa, l), peso:causa === SEM_JUST ? 2 : causa === SEM_PREF ? 1 : 0 })).sort((x,y) => x.peso-y.peso || y.n-x.n || x.causa.localeCompare(y.causa));
+}
+// "o que compõe": sem justificativa, conta por processo; senão, junta as justificativas iguais
+function compoe(causa, l){
+  const fim = t => t.replace(/[.\s]+$/,""), m = new Map();
+  l.forEach(a => { const t = fim(causa === SEM_JUST ? semQ(a.proc) || "(sem processo)" : separaJust(justDe(a)).t || "(sem detalhe)"), k = t.toLowerCase(); if (!m.has(k)) m.set(k, [t, 0]); m.get(k)[1]++; });
+  const o = [...m.values()].sort((x,y) => y[1]-x[1]), LIM = causa === SEM_JUST ? 6 : 3, corte = t => t.length > 64 ? t.slice(0,62).trim() + "…" : t;
+  return o.slice(0,LIM).map(([t,n]) => n > 1 || causa === SEM_JUST ? n + "× " + corte(t) : corte(t)).join(" · ") + (o.length > LIM ? " · e mais " + o.slice(LIM).reduce((s,x) => s+x[1],0) : "");
+}
+
 /* ---------- PowerPoint no layout do Painel Executivo do comitê ---------- */
 let capaCache;
 // organização das tabelas do PPT: "atraso" (enxuto, padrão) ou "processo"; preferência de cada um, guardada no navegador
 function modoTabelas(){ const s = document.getElementById("f-modo"); if (s) return s.value; try{ return localStorage.getItem("logistica-ppt-modo") || "atraso"; }catch(e){ return "atraso"; } }
+// slide realizado x esperado: "proc" (padrão) ou "tema"
+function modoER(){ const s = document.getElementById("f-er"); if (s) return s.value; try{ return localStorage.getItem("logistica-ppt-er") || "proc"; }catch(e){ return "proc"; } }
+const textoComp = (k, r) => ((notaDe("c", k + "|" + r.causa)||{dados:{}}).dados.texto || "").trim() || r.comp;
 async function imagemCapa(){
   if (capaCache !== undefined) return capaCache;
   capaCache = null;
@@ -724,7 +1067,36 @@ async function montaPPT(){
     { x:6.3, y:6.35, w:6.6, h:0.6, fontFace:F, fontSize:10, bold:true, color:"FFFFFF", fill:{ color:"128A8F" }, valign:"middle", margin:6 });
   rod(s);
 
-  // 4+. tabelas: vencidas, bloqueadas vencidas, inícios atrasados — AGRUPADAS
+  // 4. progresso realizado x esperado por processo (ou tema) (24/11/2026)
+  {
+    const porTema = modoER() === "tema", chaveDe = a => porTema ? (a.tema || "(sem tema)") : (semQ(a.proc) || "(sem processo)");
+    const R = rg.R, vence7 = rg.ab.filter(a => a.st !== "Bloqueado" && a.bf && dias(d8(a.bf), R) > 0 && dias(d8(a.bf), R) <= 7);
+    const avDe = l => { let e = 0, r = 0, n = 0; l.forEach(a => { const i = d8(a.bi), f = d8(a.bf); if (!i || !f || f <= i) return; const sh = dias(R, i) - 1, sf = dias(f, i); e += sh > sf ? 1 : (sh < 0 ? 0 : sh/sf); r += (parseFloat(String(a.pr||"0").replace("%","")) || 0)/100; n++; }); return n ? { e:e/n, r:r/n, n } : null; };
+    const p1 = x => (100*x).toFixed(1).replace(".",",") + "%", p2 = x => x.toFixed(2).replace(".",",") + "%";
+    const grupos = new Map(); rg.base.forEach(a => { const k = chaveDe(a); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(a); });
+    const lin = [...grupos.entries()].sort((x,y) => y[1].length - x[1].length || x[0].localeCompare(y[0]));
+    const preA = rg.base.filter(a => a.fase === "Pré-Closing" && a.st === "Em Andamento").length;
+    s = p.addSlide();
+    titulo(s, "PANORAMA EXECUTIVO | LOGÍSTICA: REALIZADO × ESPERADO", `Progresso realizado × esperado por ${porTema ? "tema" : "processo"}, até ${refBR}.`);
+    kpi(s, 0.4, 1.25, 2.35, tot, "Ações consideradas");
+    kpi(s, 2.9, 1.25, 2.35, p2(rg.rea), "Progresso realizado", rg.rea >= rg.esp ? C.grn : C.red);
+    kpi(s, 5.4, 1.25, 2.35, p2(rg.esp), "Progresso esperado", C.gry);
+    kpi(s, 7.9, 1.25, 2.35, preA, "Pré-Closing em andamento", C.ora);
+    kpi(s, 10.4, 1.25, 2.5, rg.ven.length, "Ações vencidas · +" + rg.blo.length + " bloqueadas à parte", C.red);
+    const n = lin.length, hl = Math.min(0.4, 4.45/(n + 2)), fs = n > 14 ? 9 : 11, mg = [1, 5, 1, 5];
+    const rows = [[H(porTema ? "Tema" : "Processo", { align:"left", fontSize:fs, margin:mg }), ...["Nº ações","% Realizado","% Esperado","Ações vencidas","Vencem em 7 dias"].map(t => H(t, { fontSize:fs, margin:mg }))]].concat(lin.map(([k, l], i) => {
+      const v = avDe(l), z = { fill:{ color:i % 2 ? "FFFFFF" : "F4F7FA" }, fontSize:fs, margin:mg }, ce = o => Object.assign({}, z, { align:"center" }, o||{});
+      const nv = rg.ven.filter(a => chaveDe(a) === k).length, n7 = vence7.filter(a => chaveDe(a) === k).length;
+      return [T(k, z), T(l.length, ce()), T(v ? p1(v.r) : "–", ce({ bold:true, color: !v ? C.gry : v.r - v.e >= -0.0005 ? "2E7D32" : C.red })), T(v ? p1(v.e) : "–", ce({ bold:true, color:C.head })),
+              T(nv, ce({ bold:nv > 0, color:nv ? C.red : C.gry })), T(n7, ce({ bold:n7 > 0, color:n7 ? C.ora : C.gry }))];
+    }));
+    rows.push([H("TOTAL", { align:"left", fontSize:fs, margin:mg }), ...[tot, p1(rg.rea/100), p1(rg.esp/100), rg.ven.length, vence7.length].map(t => H(String(t), { fontSize:fs, margin:mg }))]);
+    s.addTable(rows, { x:0.4, y:2.35, w:12.5, colW:[4.7,1.4,1.6,1.6,1.6,1.6], rowH:hl, border:{ type:"solid", color:"E2E8F0", pt:0.5 } });
+    s.addText(`Médias simples das ${rg.n} ações com duração na baseline. Realizado em verde: igual ou acima do esperado; em vermelho: abaixo. “Vencem em 7 dias”: fim da baseline nos 7 dias seguintes a ${refBR}, sem bloqueadas.`, { x:0.4, y:7.02, w:6.8, h:0.38, fontFace:F, fontSize:8, color:C.gry, margin:0, valign:"middle" });
+    rod(s);
+  }
+
+  // 5+. tabelas: vencidas, bloqueadas vencidas, inícios atrasados — AGRUPADAS
   //     POR PROCESSO (pedido do Bruno, 23/11): cada processo começa no seu
   //     próprio slide, na ordem do que tem mais para o que tem menos, e a
   //     tabela traz a coluna Processo.
@@ -766,6 +1138,42 @@ async function montaPPT(){
   tabela(rg.ven, "Atividades vencidas — visão executiva", "vencidas", "Atraso");
   if (rg.blo.length) tabela(rg.blo, "Bloqueadas com prazo vencido — fora da conta", "bloqueadas", "Atraso");
   tabela(rg.ini, "Inícios atrasados — visão executiva", "atrasos", "Atraso");
+
+  // último: Pareto das justificativas, vencidas e inícios atrasados (24/11/2026)
+  {
+    s = p.addSlide();
+    s.addShape(p.ShapeType.rect, { x:0, y:0, w:13.33, h:0.12, fill:{ color:C.head } });
+    s.addText("Pareto de justificativas de atraso: fim e início", { x:0.4, y:0.22, w:7.4, h:0.45, fontFace:F, fontSize:22, bold:true, color:C.teal, margin:0 });
+    s.addText(`Referência: ${refBR} · cada ação classificada pela causa principal declarada na justificativa`, { x:0.4, y:0.7, w:7.4, h:0.3, fontFace:F, fontSize:11, color:C.gry, margin:0 });
+    const PV = pareto(rg.ven), PI = pareto(rg.ini), cau = P => P.filter(r => !r.peso)[0], semJ = P => P.filter(r => r.causa === SEM_JUST).reduce((t,r) => t + r.n, 0), pz = (x, t) => t ? Math.round(100*x/t) + "%" : "0%";
+    const mV = cau(PV);
+    kpi(s, 7.75, 0.22, 1.3, rg.ven.length, "vencidas (fim)");
+    kpi(s, 9.13, 0.22, 1.3, rg.ini.length, "inícios atrasados");
+    kpi(s, 10.51, 0.22, 1.3, mV ? pz(mV.n, rg.ven.length) : "–", "causa nº 1 (vencidas)", C.red);
+    kpi(s, 11.89, 0.22, 1.3, semJ(PV) + " | " + semJ(PI), "sem justif. (fim | início)", C.ora);
+    const lado = (P, total, x, tit, tk) => {
+      s.addText(tit, { x, y:1.3, w:6.15, h:0.32, fontFace:F, fontSize:13, bold:true, color:C.head, margin:0 });
+      if (!P.length){ s.addText("Nenhuma ação nesta situação.", { x, y:1.8, w:6, h:0.4, fontFace:F, fontSize:11, color:C.gry, margin:0 }); return; }
+      let ac = 0; const rot = P.map(r => r.causa), val = P.map(r => r.n), acum = P.map(r => { ac += r.n; return ac/total; });
+      // barras na metade de baixo e acumulado na faixa de cima, para os números não se cruzarem
+      // (os eixos de valor ficam sem rótulo, mas não apagados: apagado, o PowerPoint mistura as escalas)
+      s.addChart([
+        { type:p.ChartType.bar, data:[{ name:"Nº de ações", labels:rot, values:val }], options:{ barGapWidthPct:45, chartColors:P.map((r,k) => r.peso ? "94A3B8" : k === 0 ? "C0392B" : C.head), showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0", dataLabelFontSize:11, dataLabelFontBold:true, dataLabelColor:C.txt, dataLabelFontFace:F } },
+        { type:p.ChartType.line, data:[{ name:"% acumulado", labels:rot, values:acum }], options:{ secondaryValAxis:true, secondaryCatAxis:true, chartColors:["E8A33A"], lineSize:2, lineDataSymbol:"circle", lineDataSymbolSize:7, showValue:true, dataLabelPosition:"t", dataLabelFormatCode:"0%", dataLabelFontSize:9, dataLabelColor:"8A5A00", dataLabelFontFace:F } }
+      ], { x:x - 0.1, y:1.6, w:6.3, h:2.6, showLegend:false,
+        catAxes:[{ catAxisLabelFontSize:9, catAxisLabelFontFace:F, catAxisLabelColor:C.txt }, { catAxisHidden:true }],
+        valAxes:[{ valAxisMinVal:0, valAxisMaxVal:2*Math.max(...val), valAxisLabelFormatCode:";;;", valAxisLabelColor:"FFFFFF", valAxisLabelFontSize:1, valAxisLineShow:false, valGridLine:{ style:"none" }, showValAxisTitle:false }, { valAxisMinVal:-2.286, valAxisMaxVal:1.286, valAxisLabelFormatCode:";;;", valAxisLabelColor:"FFFFFF", valAxisLabelFontSize:1, valAxisLineShow:false, valGridLine:{ style:"none" }, showValAxisTitle:false }] });
+      const mg = [2, 5, 2, 5], lim = P.length > 6 ? 70 : P.length > 5 ? 140 : 230;   // muitas causas: texto menor, para caber
+      const rows = [[H("Causa",{align:"left",margin:mg}), H("Nº",{margin:mg}), H("O que compõe",{align:"left",margin:mg})]].concat(P.map((r,i) => {
+        const z = { fill:{ color:i % 2 ? "EEF2F6" : "FFFFFF" }, margin:mg, fontSize:8.5 };
+        return [T(r.causa, Object.assign({ bold:!r.peso }, z)), T(r.n, Object.assign({ align:"center", bold:true }, z)), T((t => t.length > lim ? t.slice(0, lim - 1).trim() + "…" : t)(textoComp(tk, r)), Object.assign({}, z, { fontSize:8 }))];
+      }));
+      s.addTable(rows, { x, y:4.3, w:6.15, colW:[1.85,0.45,3.85], rowH:0.27, border:{ type:"solid", color:"E2E8F0", pt:0.5 } });
+    };
+    lado(PV, rg.ven.length, 0.4, `1 · Vencidas (data fim): ${rg.ven.length} ações`, "v");
+    lado(PI, rg.ini.length, 6.85, `2 · Inícios atrasados (data início): ${rg.ini.length} ações`, "i");
+    rod(s);
+  }
 
   await p.writeFile({ fileName: "painel-executivo-logistica-" + pac.ref + ".pptx" });
 }
