@@ -104,7 +104,8 @@ table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
 #gr-txt{border:1px solid #cbd5e1;border-radius:8px;padding:5px 10px;font-size:12.5px;width:170px}
 #gr-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:12px;align-items:center}
 #gr-chips .ch{background:#0b1f3a;color:#fff;border:0;border-radius:99px;padding:3px 10px;cursor:pointer;font-size:12px;max-width:100%}
-.gk{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.vivo{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.gk{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:10px;margin-bottom:12px}
 .gk>button,.gk>div{background:#fff;border:1px solid var(--l);border-radius:12px;padding:10px 12px;text-align:left;min-width:0;font:inherit;color:inherit}
 .gk>button{cursor:pointer}.gk>button:hover{border-color:#2376a8}.gk>.on{outline:2px solid #0b1f3a}
 .gk .v{font-size:24px;font-weight:700;color:var(--n);line-height:1.15}.gk .r{font-size:12px;color:var(--m);display:flex;align-items:center;gap:6px}
@@ -149,7 +150,7 @@ table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
 .mx .tt2{font-weight:700;color:#1e293b;background:#f1f5f9;border-radius:4px;text-align:center;padding:5px 6px}
 #gr-tip{position:fixed;z-index:60;pointer-events:none;background:#0b1f3a;color:#fff;font-size:12px;line-height:1.45;border-radius:8px;padding:7px 10px;max-width:320px;white-space:pre-line;display:none;box-shadow:0 8px 20px #0f172a44}
 .gsit{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
-@media (max-width:1100px){.gk{grid-template-columns:repeat(4,minmax(0,1fr))}.c4,.c6,.c8{grid-column:span 12}}
+@media (max-width:1100px){.gk{grid-template-columns:repeat(3,minmax(0,1fr))}.c4,.c6,.c8{grid-column:span 12}}
 @media (max-width:700px){
   #grafico{padding:0 8px 40px}#grafico .barra{position:static}
   .gk{grid-template-columns:repeat(2,minmax(0,1fr))}.gk .v{font-size:20px}
@@ -298,9 +299,58 @@ function idNovo(at){
 }
 const limpa = s => String(s ?? "").replace(/[\u200b-\u200d\ufeff]/g,"").replace(/\s+/g," ").trim();
 const junta = (p, t) => p ? p + (t ? " - " + t : "") : t;
+/* Números ao vivo (25/11/2026): foto do Monday (export) + o que o site tem de mais novo que ela.
+   Vale o rascunho (ainda não foi para o Monday) e o lançado no Monday DEPOIS do export. O que foi recusado,
+   o que já está na foto, campo em conflito entre autores e % de card bloqueado ficam fora. */
+function vivo(){ try{ return localStorage.getItem("logistica-vivo") !== "0"; }catch(e){ return true; } }
+function tLido(){ const m = /^(\d\d)\/(\d\d)\/(\d{4}) (\d\d):(\d\d)/.exec(pac && pac.lido || ""); return m ? new Date(+m[3], m[2]-1, +m[1], +m[4], +m[5]).getTime() : 0; }
+const VAL = { pct:d => d.pct || "", just:d => d.prefixo ? junta(d.prefixo, limpa(d.justificativa)) : "", com:d => (d.comentario||"").trim() };
+function maisNovo(l){
+  const d = l.dados, m = d.monday;
+  return d.tipo === "a" && temConteudo(d) && (!m || (m.ok && Date.parse(m.em) > tLido()));
+}
+function campoNovo(at, c){
+  const ls = [...lanc.values()].filter(l => l.dados.at === at && maisNovo(l) && VAL[c](l.dados) && !((l.dados.monday||{}).fora||[]).includes(c)).sort(recente);
+  if (!ls.length) return null;
+  const ra = ls.filter(l => !l.dados.monday), porAutor = new Map();
+  ra.forEach(l => { if (!porAutor.has(l.autor)) porAutor.set(l.autor, VAL[c](l.dados)); });
+  if (c !== "com" && new Set(porAutor.values()).size > 1) return { conflito:true, v:VAL[c](( ls.find(l => l.dados.monday) || {dados:{}} ).dados) };
+  return { v:VAL[c](ls[0].dados) };
+}
+function aoVivo(a){
+  const p = campoNovo(a.at, "pct");
+  if (!p || !p.v || p.v === a.pr || a.st === "Bloqueado" || a.st === "Cancelado" || a.st === "Fora do Programa") return a;
+  return { ...a, pr:p.v, st:p.v === "100%" ? "Concluído" : p.v === "0%" ? "Não Iniciado" : "Em Andamento", doSite:true };
+}
+function placarVivo(){
+  const r = { ats:0, pct:0, just:0, conf:[], barr:[] };
+  new Set([...lanc.values()].filter(maisNovo).map(l => l.dados.at)).forEach(at => {
+    const a = ativ.get(at); if (!a) return;
+    const p = campoNovo(at, "pct"), j = campoNovo(at, "just"); let k = 0;
+    if ((p && p.conflito) || (j && j.conflito)) r.conf.push(at);
+    if (p && p.v && p.v !== a.pr){ if (a.st === "Bloqueado") r.barr.push(at); else { r.pct++; k = 1; } }
+    if (j && j.v && j.v !== limpa(a.just)){ r.just++; k = 1; }
+    r.ats += k;
+  });
+  return r;
+}
+function textoVivo(){
+  const r = placarVivo(), lido = pac.lido || dbr(pac.ref), pl = (n, u, v) => n + " " + (n === 1 ? u : v);
+  return { r, t: !vivo() ? "Só a foto do Monday: export de " + lido : "Export de " + lido + (r.ats ? " + " + pl(r.ats, "atividade alterada no site", "atividades alteradas no site") + " (" + [r.pct ? r.pct + " de %" : "", r.just ? pl(r.just, "justificativa", "justificativas") : ""].filter(Boolean).join(", ") + ")" : ", sem nada mais novo no site") };
+}
+function seloVivo(){
+  const { r, t } = textoVivo(), v = vivo();
+  return `<div class="vivo"><button class="tg ${v?"on":""}" type="button" data-vivo="1">Com os lançamentos do site</button><button class="tg ${v?"":"on"}" type="button" data-vivo="0">Só a foto do Monday</button><span class="small">${esc(t)}</span>`
+    + (v && r.conf.length ? `<span class="small" style="color:var(--er)">⚠ em conflito, fora da conta: ${esc(r.conf.join(", "))}</span>` : "") + (v && r.barr.length ? `<span class="small" style="color:var(--av)">% em card bloqueado, fora da conta: ${esc(r.barr.join(", "))}</span>` : "") + `</div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-vivo]"); if (!b) return;
+  try{ localStorage.setItem("logistica-vivo", b.dataset.vivo); }catch(x){}
+  remarcaTudo();
+});
 // justificativa que está hoje no Monday: a do export ou, se já lançamos uma depois dele, a lançada
 function justMonday(at){
-  const l = lancDe(at).filter(l => l.dados.monday && l.dados.monday.ok && l.dados.prefixo).sort(recente)[0];
+  const l = lancDe(at).filter(l => l.dados.monday && l.dados.prefixo && maisNovo(l) && !(l.dados.monday.fora||[]).includes("just")).sort(recente)[0];
   if (l) return junta(l.dados.prefixo, limpa(l.dados.justificativa));
   return limpa((ativ.get(at) || {}).just);
 }
@@ -382,9 +432,20 @@ const CSS_FRAME = `
   tr[data-online-at] > td:first-child:hover{text-decoration:underline}
   .ol-bt{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;border:1px solid #cbd5e1;background:#fff;color:#0b1f3a;font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle}
   .ol-bt:hover{background:#0b1f3a;color:#fff}
+  #ol-foto{margin:10px 0;padding:8px 12px;border-radius:10px;background:#fffbeb;border:1px solid #fcd34d;color:#78350f;font-size:12.5px}
+  #ol-fil{flex-basis:100%;min-width:0}
+  .ol-fl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .ol-fl details{position:relative}
+  .ol-fl summary{list-style:none;cursor:pointer;border:1px solid #cbd5e1;border-radius:99px;padding:5px 11px;font-size:12px;background:#fff;color:#334155;white-space:nowrap}
+  .ol-fl summary::-webkit-details-marker{display:none}.ol-fl summary::after{content:" ▾";color:#64748b}
+  .ol-fl details.sel>summary{background:#0b1f3a;color:#fff;border-color:#0b1f3a}
+  .ol-fl .lst{position:absolute;top:calc(100% + 4px);left:0;z-index:30;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 12px 28px #0f172a33;max-height:320px;overflow:auto;min-width:240px;max-width:min(420px,84vw);padding:6px;font-size:12.5px}
+  .ol-fl .lst label{display:flex;gap:8px;align-items:flex-start;padding:5px 6px;border-radius:6px;cursor:pointer}.ol-fl .lst label:hover{background:#f1f5f9}
+  .ol-fl input[type=search]{border:1px solid #cbd5e1;border-radius:99px;padding:5px 11px;font-size:12px;width:170px}
+  @media (max-width:760px){.ol-fl .lst{position:fixed;left:8px;right:8px;top:auto;bottom:8px;max-height:60vh;max-width:none}}
   tr.ol-tem > td:first-child{box-shadow:inset 4px 0 0 #0f766e}
   .ol-res{display:block;margin-top:5px;font-size:11.5px;color:#0f766e;background:#ecfdf5;border-radius:6px;padding:4px 7px;white-space:pre-wrap}
-  /* celular: pedido do Bruno/Renato, 23/11 */
+  /* celular, 23/11 */
   @media (max-width:760px){
     .wrap{padding:10px 8px 40px!important}
     header{padding:16px!important;border-radius:12px!important}
@@ -421,7 +482,70 @@ function realca(fr){
     td.appendChild(bt);
     td.addEventListener("click", ev => { ev.stopPropagation(); abre(at); });
   });
+  ligaFiltros(fr);
   marcaFrame(fr);
+}
+/* Filtros do Painel gráfico que os reports não têm (25/11/2026). O report chama window.olPassa(at) para cada linha
+   (gancho do gerador); a situação vem da foto do Monday, a justificativa é a mais nova (site ou Monday).
+   O estado é um só: o que se marca na aba Geral vale também na Por processo. */
+const XF = [["causa","Justificativa"],["sit","Situação"],["tema","Tema"],["pai","Atividade principal"],["area","Área executora"],["etapa","Etapa"],["mes","Mês do fim (baseline)"]];
+const X = { f:{}, txt:"", abertas:false, idx:null };
+const xTem = () => !!(X.txt || X.abertas || Object.values(X.f).some(v => v.size));
+function xIdx(){ if (!X.idx) X.idx = new Map(montaDados(regua(false), true).map(o => [o.a.at, o])); return X.idx; }
+function xPassa(at, menos){
+  if (!xTem()) return true;
+  const o = xIdx().get(at); if (!o) return false;
+  if (X.abertas && !o.ab) return false;
+  if (X.txt && !(o.a.at + " " + o.a.nome + " " + o.a.pai).toLowerCase().includes(X.txt.toLowerCase())) return false;
+  for (const d in X.f){ if (d === menos || !X.f[d].size) continue; if (!X.f[d].has(o.v[d])) return false; }
+  return true;
+}
+const frames = () => [$("#fr-geral"), $("#fr-processo")];
+function xPinta(){
+  frames().forEach(fr => {
+    const doc = fr.contentDocument, w = fr.contentWindow; if (!doc || !doc.getElementById("ol-fil")) return;
+    doc.querySelectorAll("#ol-fil details").forEach(dd => { const n = (X.f[dd.dataset.d]||new Set()).size; dd.classList.toggle("sel", n > 0); dd.querySelector("summary").textContent = DIM[dd.dataset.d] + (n ? " (" + n + ")" : ""); if (dd.open) xLista(dd); });
+    doc.getElementById("ol-sj").classList.toggle("on", !!(X.f.causa && X.f.causa.has(SEM_JUST)));
+    doc.getElementById("ol-ab").classList.toggle("on", X.abertas);
+    const t = doc.getElementById("ol-txt"); if (doc.activeElement !== t) t.value = X.txt;
+    if (w.olAplica) w.olAplica();
+  });
+}
+function xToggle(d, x){ const s = X.f[d] || (X.f[d] = new Set()); s.has(x) ? s.delete(x) : s.add(x); xPinta(); }
+function xLista(dd){
+  const d = dd.dataset.d, s = X.f[d] || new Set(), m = new Map(), lst = dd.querySelector(".lst"), sc = lst.scrollTop;
+  xIdx().forEach((o, at) => { const x = o.v[d]; if (x && xPassa(at, d)) m.set(x, (m.get(x)||0) + 1); });
+  s.forEach(x => { if (!m.has(x)) m.set(x, 0); });
+  const ks = ["pai","tema"].includes(d) ? [...m.keys()].sort((x,y) => x.localeCompare(y)) : d === "causa" ? [...m.keys()].sort((x,y) => (x === SEM_JUST ? -1 : y === SEM_JUST ? 1 : m.get(y)-m.get(x))) : ordena([...m.keys()], d, x => m.get(x));
+  lst.innerHTML = ks.map(x => `<label><input type="checkbox" value="${esc(x)}"${s.has(x)?" checked":""}><span>${esc(rotulo(d,x))}</span></label>`).join("") || "<div>Nada com os filtros atuais.</div>";
+  lst.scrollTop = sc;
+}
+function ligaFiltros(fr){
+  const doc = fr.contentDocument, w = fr.contentWindow, lp = doc.getElementById("limpar");
+  if (!lp || !w.olAplica) return;      // pacote antigo, sem o gancho
+  w.olPassa = at => !at || xPassa(at); w.olTem = xTem;
+  w.olLimpa = () => { X.f = {}; X.txt = ""; X.abertas = false; const o = frames().find(f => f !== fr), ow = o.contentWindow; xPinta2(fr); if (ow && ow.olAplica){ xPinta2(o); ow.olAplica(); } };
+  const g = doc.createElement("div"); g.id = "ol-fil"; g.className = "fgrupo";
+  g.innerHTML = `<span class="lab">Justificativa e outros (os mesmos do Painel gráfico)</span><div class="ol-fl"><span class="chip" id="ol-sj">⚑ Sem justificativa</span>${XF.map(([d,r]) => `<details data-d="${d}"><summary>${esc(r)}</summary><div class="lst"></div></details>`).join("")}<span class="chip" id="ol-ab">Só abertas</span><input id="ol-txt" type="search" placeholder="Buscar ID ou texto" aria-label="Buscar ID ou texto"></div>`;
+  lp.parentNode.insertBefore(g, lp);
+  g.querySelector("#ol-sj").onclick = () => xToggle("causa", SEM_JUST);
+  g.querySelector("#ol-ab").onclick = () => { X.abertas = !X.abertas; xPinta(); };
+  g.querySelector("#ol-txt").oninput = e => { X.txt = e.target.value.trim(); xPinta(); };
+  g.querySelectorAll("details").forEach(dd => dd.addEventListener("toggle", () => { if (dd.open){ g.querySelectorAll("details[open]").forEach(o => { if (o !== dd) o.open = false; }); xLista(dd); } }));
+  g.addEventListener("change", e => { const c = e.target; if (c.type === "checkbox") xToggle(c.closest("details").dataset.d, c.value); });
+  doc.addEventListener("click", e => { if (!e.target.closest("#ol-fil details")) g.querySelectorAll("details[open]").forEach(o => o.open = false); });
+  if (xTem()) xPinta();
+}
+// repinta só os controles (quem chama já vai reaplicar o filtro do report)
+function xPinta2(fr){ const w = fr.contentWindow, f = w && w.olAplica; if (!f) return; w.olAplica = null; try{ xPintaUm(fr); } finally { w.olAplica = f; } }
+function xPintaUm(fr){ const doc = fr.contentDocument; if (!doc.getElementById("ol-fil")) return; doc.querySelectorAll("#ol-fil details").forEach(dd => { const n = (X.f[dd.dataset.d]||new Set()).size; dd.classList.toggle("sel", n > 0); dd.querySelector("summary").textContent = DIM[dd.dataset.d] + (n ? " (" + n + ")" : ""); dd.open = false; }); doc.getElementById("ol-sj").classList.remove("on"); doc.getElementById("ol-ab").classList.remove("on"); doc.getElementById("ol-txt").value = ""; }
+// aviso de que estas duas abas são foto do export
+function avisoFoto(fr){
+  const doc = fr.contentDocument, n = placarVivo().ats; let e = doc.getElementById("ol-foto");
+  const ancora = doc.querySelector(".tabs") || doc.querySelector("section"); if (!ancora) return;
+  if (!n){ if (e) e.remove(); return; }
+  if (!e){ e = doc.createElement("div"); e.id = "ol-foto"; ancora.parentNode.insertBefore(e, ancora); }
+  e.textContent = "Números desta aba: foto do Monday, export de " + (pac.lido || dbr(pac.ref)) + ". Há " + n + (n === 1 ? " atividade alterada" : " atividades alteradas") + " no site depois dela: o Painel gráfico e o PPT já contam; aqui entram no próximo export.";
 }
 function marcaFrame(fr){
   const doc = fr.contentDocument; if (!doc || !pac) return;
@@ -435,6 +559,8 @@ function marcaFrame(fr){
     if (task && !r){ r = doc.createElement("span"); r.className = "ol-res"; task.appendChild(r); }
     if (r) r.textContent = ls.map(l => resumoLinha(l)).join("\n");
   });
+  X.idx = null; avisoFoto(fr);
+  if (xTem() && fr.contentWindow.olAplica) fr.contentWindow.olAplica();
 }
 function resumoLinha(l){
   const d = l.dados, p = [];
@@ -444,6 +570,7 @@ function resumoLinha(l){
   return p.join(" · ") + "  — " + (d.nome_autor || l.autor) + ", " + hora(l.atualizado_em);
 }
 function remarcaTudo(){
+  if (pac){ const n = placarVivo().ats; $("#p-ref").textContent = "Export do Monday: " + (pac.lido || dbr(pac.ref)) + (n ? " · +" + n + " do site" : ""); }
   marcaFrame($("#fr-geral")); marcaFrame($("#fr-processo"));
   // não redesenha a aba enquanto alguém digita nela (senão o texto some)
   const digitando = document.activeElement && $("#resumo").contains(document.activeElement);
@@ -577,9 +704,9 @@ const FORA = new Set(["Cancelado","Fora do Programa"]);
 const d8 = s => s ? new Date(s + "T00:00:00") : null;
 const dias = (a, b) => Math.round((a - b) / 86400000);
 const ehAltoCrit = a => /^(Alto|Crítico)/.test(a.imp || "");
-function regua(){
+function regua(v = false){
   const R = d8(pac.ref);
-  const base = [...ativ.values()].filter(a => !FORA.has(a.st));
+  const base = (v ? [...ativ.values()].map(aoVivo) : [...ativ.values()]).filter(a => !FORA.has(a.st));
   const ab = base.filter(a => a.st !== "Concluído");
   const venT = ab.filter(a => a.bf && d8(a.bf) <= R).map(a => ({...a, atraso: dias(R, d8(a.bf))}));
   const ven = venT.filter(a => a.st !== "Bloqueado").sort((x,y) => y.atraso - x.atraso);
@@ -595,11 +722,10 @@ function regua(){
   });
   return { R, base, ab, ven, blo, ini, n, esp: n ? 100*se/n : 0, rea: n ? 100*sr/n : 0 };
 }
-// justificativa vigente: a lançada hoje no site (mais recente) ou a que já está no Monday
-function justDe(a){
-  const ls = lancDe(a.at).filter(l => l.dados.prefixo && !(l.dados.monday && !l.dados.monday.ok)).sort(recente);
-  if (ls.length){ const d = ls[0].dados; return d.prefixo + ((d.justificativa||"").trim() ? " - " + d.justificativa.trim() : ""); }
-  return a.just || "";
+// justificativa vigente: a do site, se for mais nova que o export (modo ao vivo), ou a da foto do Monday
+function justDe(a, v = vivo()){
+  const j = v ? campoNovo(a.at, "just") : null;
+  return (j && j.v) || a.just || "";
 }
 // notas manuais do fechamento (por processo e leitura geral): vale a mais recente
 function notaDe(tipo, chave){
@@ -613,11 +739,11 @@ function processosVencidos(rg){
   return [...m.entries()].sort((x,y) => y[1] - x[1]).map(x => x[0]);
 }
 function htmlFechamento(){
-  const rg = regua();
+  const rg = regua(vivo());
   const procs = processosVencidos(rg);
   const gl = notaDe("g", "leitura");
   let h = `<div class="card"><h2>Fechamento para o PPT</h2>
-    <div class="small">Régua do PMO, export de ${esc(pac.lido||dbr(pac.ref))}: <b>${rg.base.length}</b> atividades · <b>${rg.ven.length}</b> vencidas (+${rg.blo.length} bloqueadas à parte) · <b>${rg.ini.length}</b> inícios atrasados · esperado ${rg.esp.toFixed(1).replace(".",",")}% × realizado ${rg.rea.toFixed(1).replace(".",",")}%.
+    ${seloVivo()}<div class="small" style="margin-top:6px">Régua do PMO: <b>${rg.base.length}</b> atividades · <b>${rg.ven.length}</b> vencidas (+${rg.blo.length} bloqueadas à parte) · <b>${rg.ini.length}</b> inícios atrasados · esperado ${rg.esp.toFixed(1).replace(".",",")}% × realizado ${rg.rea.toFixed(1).replace(".",",")}%.
     Os números e as tabelas saem prontos. O que não dá para calcular, a gestão escreve aqui e vai para o slide.</div>
     <div class="campo"><label>Leitura executiva (rodapé dos slides)</label>
       <textarea data-nota="g" data-chave="leitura" placeholder="Ex.: pactuar responsáveis e novas datas para as vencidas de Alto/Crítico.">${esc(gl ? gl.dados.texto : "")}</textarea>
@@ -701,12 +827,13 @@ const corDif = v => v.r - v.e >= -0.0005 ? "#3f8f3a" : v.r - v.e > -0.1 ? "#e877
 const legenda = (c, cs) => '<div class="leg">' + cs.map(x => `<span><span class="sw" style="background:${COR[c][x]}"></span> ${x}</span>`).join("") + "</div>";
 // causa principal declarada: o prefixo da justificativa vigente (site ou Monday)
 const SEM_JUST = "Sem justificativa", SEM_PREF = "Fora do formato (sem prefixo)";
-function causaDe(a){ const j = limpa(justDe(a)); if (!j) return SEM_JUST; return separaJust(j).p || SEM_PREF; }
+function causaDe(a, v){ const j = limpa(justDe(a, v)); if (!j) return SEM_JUST; return separaJust(j).p || SEM_PREF; }
 const impDe = a => /^Crítico/.test(a.imp||"") ? "Crítico" : (a.imp || "(sem criticidade)");
-function preparaPainel(){
-  const rg = regua(), R = rg.R, m = new Map();
+function preparaPainel(){ G.dados = montaDados(regua(vivo()), vivo()); }
+function montaDados(rg, v){
+  const R = rg.R, m = new Map();
   rg.ven.forEach(a => m.set(a.at, ["Vencida", a.atraso])); rg.blo.forEach(a => m.set(a.at, ["Bloqueada vencida", a.atraso])); rg.ini.forEach(a => m.set(a.at, ["Início atrasado", a.atraso]));
-  G.dados = rg.base.map(a => {
+  return rg.base.map(a => {
     const fim = a.bf || a.cf, df = fim ? dias(d8(fim), R) : null, ab = a.st !== "Concluído", x = m.get(a.at), p = parseFloat(String(a.pr||"0")) || 0;
     const sit = !ab ? "Concluída" : x ? x[0] : (df !== null && df <= 7 && p === 0 ? "Alerta" : "No prazo");
     const venc = sit === "Vencida" || sit === "Bloqueada vencida";
@@ -716,7 +843,7 @@ function preparaPainel(){
       tema:a.tema||"(sem tema)", proc:semQ(a.proc)||"(sem processo)", pai:a.pai||"(sem principal)", sit, st:a.st||"(sem status)", imp:impDe(a),
       fase:a.fase||"(sem fase)", area:a.area||"(sem área)", etapa:a.etapa||"(sem etapa)", mes:fim ? fim.slice(0,7) : "(sem data)",
       prazo:!ab ? "Concluída" : df===null ? "Sem prazo" : df<=0 ? "Já venceu" : df<=15 ? "Até 15 dias" : df<=45 ? "16 a 45 dias" : df<=90 ? "46 a 90 dias" : "Mais de 90 dias",
-      causa:(venc || sit==="Início atrasado") ? causaDe(a) : "", aging:venc ? (x[1]<=15 ? "Até 15 dias" : x[1]<=30 ? "16 a 30 dias" : "Mais de 30 dias") : "" },
+      causa:(venc || sit==="Início atrasado") ? causaDe(a, v) : "", aging:venc ? (x[1]<=15 ? "Até 15 dias" : x[1]<=30 ? "16 a 30 dias" : "Mais de 30 dias") : "" },
       pes:Object.fromEntries(PAPEIS.map(([k]) => [k, String(a[k]||"").split(",").map(s => s.trim()).filter(Boolean)])) };
   });
 }
@@ -765,7 +892,7 @@ function esqueletoPainel(){
     <input id="gr-txt" type="search" placeholder="Buscar ID ou texto" aria-label="Buscar ID ou texto">
     <button class="tg" type="button" id="gr-ab">Só abertas</button>
     <button class="sec" type="button" id="gr-limpa" style="padding:4px 12px;font-size:12.5px">Limpar tudo</button>
-  </div><div id="gr-chips"></div></div>
+  </div><div id="gr-chips"></div><div id="gr-vivo"></div></div>
   <div id="gr-corpo">
     <div class="gk" id="gr-kpi"></div>
     <div class="gg">
@@ -852,11 +979,12 @@ function pintaPainel(){
   if (G.txt) chip("*txt|", "Busca: " + G.txt);
   if (G.abertas) chip("*ab|", "Só abertas");
   $("#gr-chips").innerHTML = chips.length ? chips.join("") + `<span class="small">${tot.length} de ${G.dados.length} atividades</span>` : `<span class="small">Sem filtro: ${G.dados.length} atividades. Clique em qualquer gráfico para filtrar os outros.</span>`;
+  $("#gr-vivo").innerHTML = seloVivo();
   // cartões
   const av = avanco(tot), cart = (x, r) => { const n = filtra("sit").filter(o => o.sit === x).length; return `<button type="button" data-fx="sit|${x}" class="${tem("sit") && G.f.sit.has(x) ? "on" : ""}"><div class="v">${n}</div><div class="r"><span class="sw" style="background:${COR.sit[x]}"></span>${r}</div></button>`; };
   const nSit = filtra("sit").length;
   $("#gr-kpi").innerHTML = `<div><div class="v">${tot.length}</div><div class="r">atividades</div></div>`
-    + cart("Concluída", "concluídas" + (nSit ? " · " + pc1(conta(filtra("sit"),"Concluída")/nSit) : "")) + cart("Vencida","vencidas") + cart("Bloqueada vencida","bloqueadas vencidas") + cart("Início atrasado","inícios atrasados") + cart("Alerta","em alerta")
+    + cart("Concluída", "concluídas" + (nSit ? " · " + pc1(conta(filtra("sit"),"Concluída")/nSit) : "")) + cart("Vencida","vencidas") + cart("Bloqueada vencida","bloqueadas vencidas") + cart("Início atrasado","inícios atrasados") + cart("Alerta","em alerta") + cart("No prazo","no prazo")
     + `<div class="dup">${av ? `<div class="r">Esperado <b style="color:#1e293b">${pc1(av.e)}</b></div><div class="mt"><i style="width:${100*av.e}%;background:#64748b"></i></div><div class="r">Realizado <b style="color:#1e293b">${pc1(av.r)}</b><span>${sinal(+(100*(av.r-av.e)).toFixed(1)).replace(".",",")} p.p.</span></div><div class="mt"><i style="width:${100*av.r}%;background:${corDif(av)}"></i></div>` : '<div class="r">Sem duração para esperado × realizado.</div>'}</div>`;
   // barras simples
   ["sit","st","imp"].forEach(d => {
@@ -907,7 +1035,7 @@ function pintaPainel(){
   {
     const o = [...tot].sort((x,y) => ORD.sit.indexOf(x.sit)-ORD.sit.indexOf(y.sit) || y.atraso-x.atraso || (x.fim||"9").localeCompare(y.fim||"9"));
     $("#gr-lt").textContent = "Atividades (" + o.length + ")";
-    $("#gr-lista").innerHTML = o.length ? `<table class="ls"><thead><tr><th>ID</th><th style="width:34%">Atividade</th><th>Executor</th><th>Situação</th><th>Status</th><th>%</th><th>Fim (baseline)</th><th>Justificativa</th></tr></thead><tbody>` + o.slice(0,G.nLista).map(x => `<tr class="cl" data-abre="${esc(x.a.at)}"><td><b>${esc(x.a.at)}</b></td><td>${esc(x.a.nome)}<div class="small">${esc(x.v.proc)}</div></td><td>${esc(x.a.ex)}</td><td><span class="gsit"><span class="sw" style="background:${COR.sit[x.sit]}"></span>${x.sit}${x.atraso?" · "+x.atraso+"d":""}</span></td><td>${esc(x.a.st)}</td><td>${esc(x.a.pr)}</td><td style="white-space:nowrap">${x.fim?dbr(x.fim)+(x.a.bf?"":"*"):"—"}</td><td class="small">${x.v.causa ? esc(limpa(justDe(x.a))||"—") : ""}</td></tr>`).join("") + "</tbody></table>" + (o.length > G.nLista ? `<button class="mais" id="gr-mais" type="button">Mostrar mais (${o.length-G.nLista} restantes)</button>` : "") : vazio;
+    $("#gr-lista").innerHTML = o.length ? `<table class="ls"><thead><tr><th>ID</th><th style="width:34%">Atividade</th><th>Executor</th><th>Situação</th><th>Status</th><th>%</th><th>Fim (baseline)</th><th>Justificativa</th></tr></thead><tbody>` + o.slice(0,G.nLista).map(x => `<tr class="cl" data-abre="${esc(x.a.at)}"><td><b>${esc(x.a.at)}</b></td><td>${esc(x.a.nome)}<div class="small">${esc(x.v.proc)}</div></td><td>${esc(x.a.ex)}</td><td><span class="gsit"><span class="sw" style="background:${COR.sit[x.sit]}"></span>${x.sit}${x.atraso?" · "+x.atraso+"d":""}</span></td><td>${esc(x.a.st)}${x.a.doSite ? '<div class="small" title="Mudou no site, depois do export">site</div>' : ""}</td><td>${esc(x.a.pr)}</td><td style="white-space:nowrap">${x.fim?dbr(x.fim)+(x.a.bf?"":"*"):"—"}</td><td class="small">${x.v.causa ? esc(limpa(justDe(x.a))||"—") : ""}</td></tr>`).join("") + "</tbody></table>" + (o.length > G.nLista ? `<button class="mais" id="gr-mais" type="button">Mostrar mais (${o.length-G.nLista} restantes)</button>` : "") : vazio;
   }
   // número dentro do segmento só se couber
   g.querySelectorAll(".br .t i").forEach(i => { if (i.textContent && i.offsetWidth < 8*i.textContent.length + 8) i.textContent = ""; });
@@ -950,14 +1078,15 @@ async function gerarPPT(){
   catch(err){ console.error(err); alert("Não gerou o PPT: " + (err.message||err)); if (msg) msg.textContent = ""; }
 }
 async function montaPPT(){
-  const rg = regua(), refBR = dbr(pac.ref);
+  const rg = regua(vivo()), refBR = dbr(pac.ref);
   const C = { navy:"0B2545", teal:"12708F", head:"0A4A68", red:"D7263D", ora:"E8771A", yel:"F2B705", grn:"5FA02D", gry:"64748B", lt:"EEF2F6", txt:"1E293B" };
   const F = "Segoe UI";
   const pct = (x, t) => t ? (100*x/t).toFixed(1).replace(".",",") + "%" : "0%";
   const corImp = i => /^Crítico/.test(i) ? "7B0D1E" : i === "Alto" ? "C00000" : i === "Médio" ? "F2B705" : i === "Baixo" ? "00A04A" : "94A3B8";
+  const nSite = vivo() ? placarVivo().ats : 0;
   const leitura = (notaDe("g","leitura")||{dados:{}}).dados.texto || "";
   const p = new PptxGenJS(); p.layout = "LAYOUT_WIDE"; p.title = "Painel Executivo — FT 06b Logística — " + refBR;
-  const rod = s => s.addText("Programa de Integração  |  Comitê Executivo  ·  régua do PMO  ·  export " + (pac.lido||refBR), { x:7.3, y:7.05, w:5.8, h:0.3, fontFace:F, fontSize:9, color:C.teal, align:"right" });
+  const rod = s => s.addText("Programa de Integração  |  Comitê Executivo  ·  régua do PMO  ·  export " + (pac.lido||refBR) + (nSite ? " + " + nSite + " do site" : ""), { x:6.6, y:7.05, w:6.5, h:0.3, fontFace:F, fontSize:9, color:C.teal, align:"right" });
   const titulo = (s, t, sub) => {
     s.addShape(p.ShapeType.rect, { x:0, y:0, w:13.33, h:0.12, fill:{ color:C.head } });
     s.addText(t, { x:0.4, y:0.25, w:12.5, h:0.6, fontFace:F, fontSize:24, bold:true, color:C.teal });
@@ -988,22 +1117,40 @@ async function montaPPT(){
   const tot = rg.base.length, co = rg.base.filter(a => a.st==="Concluído").length, ea = rg.base.filter(a => a.st==="Em Andamento").length;
   const ni = rg.base.filter(a => a.st==="Não Iniciado").length, nProc = new Set(rg.base.map(a => a.proc)).size;
   s = p.addSlide();
+  const bl = rg.base.filter(a => a.st==="Bloqueado").length, outros = tot - co - ea - ni - bl;
+  const vEa = rg.ven.filter(a => a.st==="Em Andamento").length, vNi = rg.ven.filter(a => a.st==="Não Iniciado").length;
   titulo(s, "PANORAMA EXECUTIVO | LOGÍSTICA", `Execução com ${pct(co,tot)} concluído (${co} de ${tot} atividades); ${rg.ven.length} vencidas (bloqueadas fora do cálculo) e ${rg.ini.length} inícios atrasados.`);
-  kpi(s, 0.4, 1.3, 2.35, tot, "Atividades da FT · " + nProc + " processos");
-  kpi(s, 2.9, 1.3, 2.35, co + " · " + pct(co,tot), "Concluídas", C.grn);
-  kpi(s, 5.4, 1.3, 2.35, ea + " · " + pct(ea,tot), "Em andamento", C.ora);
-  kpi(s, 7.9, 1.3, 2.35, ni + " · " + pct(ni,tot), "Não iniciadas", C.gry);
-  kpi(s, 10.4, 1.3, 2.5, rg.ven.length, "Vencidas (baseline) · +" + rg.blo.length + " bloqueadas à parte", C.red);
+  // faixa da soma: os status fecham o total. Vencidas é recorte de prazo e fica fora da faixa (25/11/2026)
+  s.addShape(p.ShapeType.rect, { x:0.3, y:1.16, w:9.95, h:1.2, fill:{ color:"F4F7FA" }, line:{ color:"C9D6E2", width:0.75 } });
+  const sinalS = (x, t) => s.addText(t, { x, y:1.38, w:0.26, h:0.45, fontFace:F, fontSize:20, bold:true, color:C.head, align:"center", valign:"middle", margin:0 });
+  const card2 = (x, w, v, per, l, sub, cor) => {
+    s.addShape(p.ShapeType.rect, { x, y:1.24, w, h:1.04, fill:{ color:"FFFFFF" }, line:{ color:"D5DCE4", width:0.75 } });
+    s.addText([{ text:String(v), options:{ fontSize:24, bold:true, color:cor||C.navy } }].concat(per ? [{ text:"  " + per, options:{ fontSize:12, bold:true, color:cor||C.navy } }] : []), { x:x+0.08, y:1.26, w:w-0.12, h:0.46, fontFace:F, margin:0, valign:"middle" });
+    s.addText(l, { x:x+0.08, y:1.72, w:w-0.12, h:0.24, fontFace:F, fontSize:10, color:C.txt, margin:0, valign:"middle" });
+    if (sub) s.addText(sub, { x:x+0.08, y:1.96, w:w-0.12, h:0.26, fontFace:F, fontSize:9, color:C.red, margin:0, valign:"middle" });
+  };
+  card2(0.4, 1.75, tot, "", "Atividades da FT", "", C.navy);
+  s.addText(nProc + " processos", { x:0.48, y:1.96, w:1.6, h:0.26, fontFace:F, fontSize:9, color:C.gry, margin:0, valign:"middle" });
+  sinalS(2.15, "=");
+  card2(2.41, 1.72, co, pct(co,tot), "Concluídas", "", C.grn);                       sinalS(4.13, "+");
+  card2(4.39, 1.72, ea, pct(ea,tot), "Em andamento", vEa + " vencidas", C.ora);       sinalS(6.11, "+");
+  card2(6.37, 1.72, ni, pct(ni,tot), "Não iniciadas", vNi + " vencidas", C.gry);      sinalS(8.09, "+");
+  card2(8.35, 1.8, bl, pct(bl,tot), "Bloqueadas" + (outros ? " · +" + outros + " sem status" : ""), rg.blo.length + " com prazo vencido", "6250D6");
+  // recorte à parte
+  s.addShape(p.ShapeType.rect, { x:10.5, y:1.16, w:2.5, h:1.2, fill:{ color:"FDF0F2" }, line:{ color:C.red, width:1.25, dashType:"dash" } });
+  s.addText([{ text:String(rg.ven.length), options:{ fontSize:24, bold:true, color:C.red } }, { text:"  Vencidas", options:{ fontSize:12, bold:true, color:C.red } }], { x:10.6, y:1.2, w:2.3, h:0.46, fontFace:F, margin:0, valign:"middle" });
+  s.addText(`${vEa} em andamento + ${vNi} não iniciadas`, { x:10.6, y:1.66, w:2.35, h:0.26, fontFace:F, fontSize:9, bold:true, color:C.txt, margin:0, valign:"middle" });
+  s.addText("Recorte de prazo (baseline): já estão nos status ao lado, não somam", { x:10.6, y:1.9, w:2.35, h:0.4, fontFace:F, fontSize:8.5, color:C.gry, margin:0, valign:"middle" });
   const jan = a => a.fase === "Pré-Closing" ? "Pré-Closing" : !(a.bf||a.cf) ? "Sem data-fim" : ((a.bf||a.cf) <= "2026-12-31" ? "Até 31/12/2026" : "2027+");
-  const linhasJ = ["Pré-Closing","Até 31/12/2026","2027+","Sem data-fim"].map(j => {
-    const g = rg.base.filter(a => jan(a) === j);
-    return [T(j,{bold:true}), T(g.length,{align:"center"}), T(g.filter(a=>a.st==="Concluído").length,{align:"center"}), T(g.filter(a=>a.st==="Em Andamento").length,{align:"center"}), T(g.filter(ehAltoCrit).length,{align:"center"})];
-  });
-  linhasJ.push([H("Total da FT",{align:"left"}), H(tot), H(co), H(ea), H(rg.base.filter(ehAltoCrit).length)]);
-  s.addTable([[H("Janela",{align:"left"}),H("Total"),H("Concl."),H("Em and."),H("Alto/Crít.")]].concat(linhasJ), { x:4.6, y:2.5, w:4.3, colW:[1.4,0.65,0.65,0.75,0.85], rowH:0.34, fontSize:9, border:{ type:"solid", color:"D5DCE4", pt:0.5 }, fill:{ color:"F6F9FB" } });
+  const mJ = [1, 3, 1, 3], cJ = { align:"center", margin:mJ, fontSize:9 }, hJ = { margin:mJ, fontSize:9 };
+  const linhaJ = (g, f) => [g.length, ...["Concluído","Em Andamento","Não Iniciado","Bloqueado"].map(x => g.filter(a => a.st===x).length), g.filter(ehAltoCrit).length].map(f);
+  const linhasJ = ["Pré-Closing","Até 31/12/2026","2027+","Sem data-fim"].map(j => [T(j,{ bold:true, margin:mJ, fontSize:9 }), ...linhaJ(rg.base.filter(a => jan(a) === j), (v, i) => T(v, Object.assign({}, cJ, i===0 ? { bold:true } : i===5 ? { color:C.gry, fill:{ color:"E9EEF3" } } : {})))]);
+  linhasJ.push([H("Total da FT", Object.assign({ align:"left" }, hJ)), ...linhaJ(rg.base, v => H(v, hJ))]);
+  s.addTable([[H("Janela", Object.assign({ align:"left" }, hJ)), ...["Total","Concl.","Em and.","Não inic.","Bloq.","Alto/Crít*"].map(t => H(t, hJ))]].concat(linhasJ), { x:4.5, y:2.5, w:4.6, colW:[1.12,0.48,0.52,0.6,0.66,0.46,0.76], rowH:0.34, border:{ type:"solid", color:"D5DCE4", pt:0.5 }, fill:{ color:"F6F9FB" } });
+  s.addText("* criticidade, não soma com os status", { x:4.5, y:4.56, w:4.6, h:0.22, fontFace:F, fontSize:8, color:C.gry, margin:0 });
   // vencidas por processo (esquerda)
   const procV = processosVencidos(rg).slice(0, 5);
-  s.addText("VENCIDAS POR PROCESSO", { x:0.4, y:2.45, w:4, h:0.3, fontFace:F, fontSize:12, bold:true, color:C.head });
+  s.addText("VENCIDAS POR PROCESSO", { x:0.4, y:2.47, w:4, h:0.3, fontFace:F, fontSize:12, bold:true, color:C.head });
   s.addTable([[H("Processo",{align:"left"}),H("Ativ."),H("Venc."),H("Bloq.")]].concat(procV.map(pn => [
     T(pn), T(rg.base.filter(a => a.proc===pn).length,{align:"center"}), T(rg.ven.filter(a => a.proc===pn).length,{align:"center",bold:true,color:C.red}), T(rg.blo.filter(a => a.proc===pn).length,{align:"center"})
   ])), { x:0.4, y:2.8, w:4.0, colW:[2.2,0.55,0.65,0.6], rowH:0.27, fontSize:8.5, border:{ type:"solid", color:"D5DCE4", pt:0.5 } });
@@ -1097,7 +1244,7 @@ async function montaPPT(){
   }
 
   // 5+. tabelas: vencidas, bloqueadas vencidas, inícios atrasados — AGRUPADAS
-  //     POR PROCESSO (pedido do Bruno, 23/11): cada processo começa no seu
+  //     POR PROCESSO (23/11): cada processo começa no seu
   //     próprio slide, na ordem do que tem mais para o que tem menos, e a
   //     tabela traz a coluna Processo.
   const tabela = (lista, nomeT, rotAtraso, sufixo) => {
