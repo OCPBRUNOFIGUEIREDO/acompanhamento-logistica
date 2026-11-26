@@ -161,26 +161,132 @@ table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
   .dd .lst{position:fixed;left:8px;right:8px;top:auto;bottom:8px;max-height:60vh;max-width:none}
 }
 @media (max-width:700px){.top h1{font-size:14px}.abas{overflow-x:auto;scrollbar-width:none;padding:8px 8px 0}.aba{padding:8px 8px;font-size:12px;white-space:nowrap;flex:none}#premissas{padding:12px 8px 40px}}
+
+/* ===== Casca nova (26/11/2026): faixa única, menu lateral retrátil e gaveta de filtros.
+   Só aparência: os ids, as abas (.aba/data-aba) e toda a lógica de cima ficam iguais. ===== */
+:root{--n:#0e3a52;--pe:#0f3d56;--pe2:#08283a;--ac:#22b5d6;--lado:66px;--ladoA:248px;--gav:300px}
+.top{background:linear-gradient(115deg,#072233 0%,#0f3d56 52%,#166584 100%);position:relative;overflow:hidden;padding:10px 18px;min-height:62px;gap:12px;box-shadow:0 2px 14px #08283a40;z-index:40;flex-wrap:nowrap}
+.top::after{content:"";position:absolute;right:-20px;bottom:-14px;width:640px;height:100px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 90' fill='none' stroke='white'%3E%3Cpath d='M0 58 Q75 28 150 52 T300 52 T450 50 T600 44' stroke-width='2'/%3E%3Cpath d='M0 70 Q75 42 150 64 T300 64 T450 62 T600 57' stroke-width='1.4' opacity='.65'/%3E%3Cpath d='M0 82 Q75 56 150 76 T300 76 T450 74 T600 70' stroke-width='1' opacity='.4'/%3E%3C/svg%3E") right bottom/100% 100% no-repeat;opacity:.16;pointer-events:none}
+.top>*{position:relative;z-index:1}
+.marca{display:flex;align-items:center;gap:10px;padding-right:16px;border-right:1px solid #ffffff2b;flex:none}
+.marca .logo{height:36px;width:auto;display:block;filter:drop-shadow(0 1px 2px #0003)}
+.marca b{display:block;font-size:15px;letter-spacing:.3px;line-height:1.15}
+.marca small{display:block;font-size:10.5px;color:#9fd6ea;letter-spacing:1.4px;text-transform:uppercase}
+.tit{min-width:0;display:flex;flex-direction:column;gap:4px;flex:1}
+.top h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top h1 #t-pag{font-weight:500;color:#bfe6f3}
+.linha{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-width:0}
+.top .pill{font-size:11.5px;padding:2px 9px}
+#p-meta{display:contents}
+#p-meta span{font-size:11.5px;color:#cfe8f1;white-space:nowrap}
+#p-meta span+span::before{content:"·";margin:0 6px 0 0;color:#7fb7cb}
+.acoes{display:flex;gap:8px;align-items:center;flex:none}
+.top button,.top label.bt{display:inline-flex;align-items:center;gap:6px;border-radius:9px;padding:6px 11px;transition:background .15s,transform .15s}
+.top button:hover,.top label.bt:hover{transform:translateY(-1px)}
+.top button svg,.top label.bt svg{width:15px;height:15px}
+#p-quem{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meio{flex:1;display:flex;min-height:0;position:relative}
+#lado{width:var(--lado);flex:none;position:relative;z-index:35;transition:width .22s ease}
+#lado .in{position:absolute;top:0;left:0;bottom:0;width:var(--lado);background:linear-gradient(180deg,var(--pe) 0%,var(--pe2) 100%);color:#cfe6ef;display:flex;flex-direction:column;gap:3px;padding:14px 10px 12px;overflow:hidden;transition:width .22s ease .05s,box-shadow .22s}
+body.lado-auto #lado:hover .in,body.lado-aberta #lado .in{width:var(--ladoA)}
+body.lado-auto #lado:hover .in{box-shadow:10px 0 30px #08283a55}
+body.lado-aberta #lado{width:var(--ladoA)}
+#lado .grp{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:#7fb7cb;padding:8px 12px 4px;white-space:nowrap;height:24px;overflow:hidden}
+#lado .grp i{font-style:normal;opacity:0;transition:opacity .15s}
+#lado .grp::before{content:"";display:block;width:22px;height:1px;background:#ffffff30;margin:6px 0 0 1px;transition:opacity .15s}
+#lado .it{display:flex;align-items:center;gap:13px;height:44px;padding:0 12px;border-radius:11px;border:0;background:none;color:inherit;cursor:pointer;white-space:nowrap;font-size:13.5px;font-weight:600;position:relative;text-align:left;width:100%;transition:background .15s,color .15s}
+#lado .it svg{width:21px;height:21px;flex:none;transition:transform .18s}
+#lado .it .lg{opacity:0;transition:opacity .15s}
+#lado .it .ct{display:none}
+#lado .it:hover{background:#ffffff14;color:#fff}
+#lado .it:hover svg{transform:scale(1.08)}
+#lado .it.on{background:linear-gradient(90deg,#22b5d63d,#22b5d60d);color:#fff;box-shadow:inset 3px 0 0 var(--ac)}
+#lado .it:disabled{opacity:.38;cursor:default;background:none}
+#lado .it.aceso{color:#fff;background:#ffffff1c}
+#fil-n{position:absolute;top:6px;left:29px;min-width:17px;height:17px;padding:0 5px;border-radius:99px;background:#f5a524;color:#08283a;font:700 10.5px/17px "Segoe UI",Arial,sans-serif;text-align:center;display:none}
+#fil-n.tem{display:block}
+body.lado-auto #lado:hover #fil-n,body.lado-aberta #lado #fil-n{left:auto;right:12px;top:13px}
+#lado .esp{flex:1}
+#bt-modo{height:38px;font-size:12px;font-weight:500;color:#9fc9d8}
+body.lado-auto #lado:hover .lg,body.lado-aberta #lado .lg,body.lado-auto #lado:hover .grp i,body.lado-aberta #lado .grp i{opacity:1}
+body.lado-auto #lado:hover .grp::before,body.lado-aberta #lado .grp::before{opacity:0;height:0;margin:0}
+.palco>.on,.palco>#grafico.on{animation:surge .28s ease}
+@keyframes surge{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.gg>.card,.gk>button,.gk>div,#resumo .card,#premissas .card{transition:box-shadow .2s,border-color .2s,transform .2s}
+.gg>.card:hover,#resumo .card:hover,#premissas .card:hover{box-shadow:0 10px 28px #08283a14;border-color:#cfe0e8}
+.gk>button:hover{transform:translateY(-2px);box-shadow:0 10px 22px #08283a1c}
+/* gaveta de filtros do Painel gráfico: os mesmos controles, em coluna à esquerda */
+#gr-faixa{position:sticky;top:0;z-index:8;background:var(--bg);padding:12px 0 8px}
+#gr-faixa:empty{display:none}
+#grafico .barra{display:none}
+body.fil-on #grafico.on{display:flex;gap:16px;align-items:flex-start}
+body.fil-on #grafico .barra{display:block;position:sticky;top:0;flex:none;width:var(--gav);height:100%;overflow:auto;padding:14px 0 30px;background:transparent}
+body.fil-on #gr-corpo{flex:1;min-width:0}
+#grafico .fl{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:7px;padding:0 12px 14px;box-shadow:0 6px 20px #08283a10}
+#grafico .fl .dd>summary{display:flex;justify-content:space-between;gap:8px;padding:8px 11px;border-radius:9px}
+#grafico .fl .dd .lst{position:static;box-shadow:none;max-height:240px;min-width:0;max-width:none;margin-top:4px;border-color:#e2e8f0}
+#grafico .fl #gr-txt{width:100%;padding:8px 11px}
+#grafico .fl .papeis{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:0 2px 4px}
+.gcab{position:sticky;top:0;z-index:3;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:13px 0 10px;margin-bottom:4px;border-bottom:2px solid var(--n);font-weight:700;color:var(--n);font-size:14px}
+.gcab .x{border:0;background:#eef4f7;color:var(--n);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px}
+.gcab .x:hover{background:var(--n);color:#fff}
+#gate{background:radial-gradient(1200px 600px at 20% 0%,#166584 0%,#0f3d56 45%,#072233 100%)}
+#gate .gform{box-shadow:0 24px 60px #0008;border:0}
+@media (max-width:1100px){body.fil-on #grafico .barra{width:270px}}
+@media (max-width:760px){
+  .top{padding:8px 12px;min-height:54px;gap:10px;flex-wrap:wrap}
+  .marca{padding-right:10px}.marca b,.marca small{display:none}.marca .logo{height:30px}
+  .top h1{font-size:14px}#p-meta,#p-quem{display:none}
+  .acoes{gap:6px}.acoes .tx{display:none}.top button,.top label.bt{padding:6px 8px}
+  .meio{flex-direction:column}
+  #lado{position:fixed;left:0;right:0;bottom:0;width:auto!important;height:calc(62px + env(safe-area-inset-bottom));z-index:45}
+  #lado .in{position:static;width:auto!important;height:100%;flex-direction:row;gap:0;padding:4px 4px env(safe-area-inset-bottom);box-shadow:0 -6px 20px #08283a40;justify-content:space-around}
+  #lado .grp,#lado .esp,#lado #bt-modo{display:none}
+  .top h1 .pref{display:none}
+  #lado .it{flex-direction:column;justify-content:center;height:54px;padding:0 2px;gap:3px;font-size:10px;font-weight:600;width:auto;flex:1;border-radius:10px}
+  #lado .it .lg{display:none}#lado .it .ct{display:block}
+  #lado .it.on{box-shadow:inset 0 3px 0 var(--ac)}
+  #fil-n{left:calc(50% + 4px);top:3px}
+  .palco{margin-bottom:calc(62px + env(safe-area-inset-bottom))}
+  body.fil-on #grafico.on{display:block}
+  body.fil-on #grafico .barra{position:fixed;left:0;right:0;bottom:calc(62px + env(safe-area-inset-bottom));top:auto;width:auto;height:78vh;z-index:44;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px #08283a55;padding:0 6px 20px}
+  #grafico .fl{box-shadow:none;border:0}
+}
 </style>
 </head>
 <body>
 <div class="top">
-  <h1>Acompanhamento — Logística</h1>
-  <span class="pill" id="p-ref">sem pacote carregado</span>
-  <span class="pill" id="p-sync" style="display:none"></span>
-  <span class="esp"></span>
-  <span class="small" id="p-quem" style="color:#dbeafe"></span>
-  <button id="bt-ppt" style="display:none" title="Gera o PowerPoint do comitê com os números e os lançamentos de hoje">Exportar PPT</button>
-  <label class="bt" id="bt-pacote" style="display:none" title="Só para o dono: o pacote gerado pela rotina da manhã">Carregar pacote do dia<input type="file" id="in-pacote" accept=".json" hidden></label>
-  <button id="bt-sair" style="display:none">Sair</button>
+  <div class="marca"><img class="logo" alt="OceanPact" src="data:image/png;base64,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"><div><b>OceanPact</b><small>Logística</small></div></div>
+  <div class="tit">
+    <h1><span class="pref">Acompanhamento da integração · </span><span id="t-pag">Geral</span></h1>
+    <div class="linha">
+      <span class="pill" id="p-ref">sem pacote carregado</span>
+      <span class="pill" id="p-sync" style="display:none"></span>
+      <span id="p-meta"></span>
+    </div>
+  </div>
+  <div class="acoes">
+    <span class="small" id="p-quem" style="color:#dbeafe"></span>
+    <button id="bt-ppt" style="display:none" title="Gera o PowerPoint do comitê com os números e os lançamentos de hoje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 13h3a2 2 0 0 0 0-4H9v8"/></svg><span class="tx">Exportar PPT</span></button>
+    <label class="bt" id="bt-pacote" style="display:none" title="Só para o dono: o pacote gerado pela rotina da manhã"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg><span class="tx">Carregar pacote do dia</span><input type="file" id="in-pacote" accept=".json" hidden></label>
+    <button id="bt-sair" style="display:none" title="Sair"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span class="tx">Sair</span></button>
+  </div>
 </div>
-<div class="abas">
-  <button class="aba on" data-aba="geral">Geral</button>
-  <button class="aba" data-aba="processo">Por processo</button>
-  <button class="aba" data-aba="painel">Painel gráfico</button>
-  <button class="aba" data-aba="resumo">Lançamentos do dia e PPT</button>
-  <button class="aba" data-aba="premissas">Premissas</button>
-</div>
+<div class="meio">
+<nav id="lado" aria-label="Navegação">
+  <div class="in">
+    <div class="grp"><i>Páginas</i></div>
+    <button class="it aba on" data-aba="geral" title="Geral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"/></svg><span class="lg">Geral</span><span class="ct">Geral</span></button>
+    <button class="it aba" data-aba="processo" title="Por processo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="m3 13 9 5 9-5"/></svg><span class="lg">Por processo</span><span class="ct">Processo</span></button>
+    <button class="it aba" data-aba="painel" title="Painel gráfico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lg">Painel gráfico</span><span class="ct">Painel</span></button>
+    <button class="it aba" data-aba="resumo" title="Lançamentos do dia e PPT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg><span class="lg">Lançamentos do dia e PPT</span><span class="ct">Lançar</span></button>
+    <button class="it aba" data-aba="premissas" title="Premissas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4V4z"/><path d="M9 9h6M9 13h6"/></svg><span class="lg">Premissas</span><span class="ct">Premissas</span></button>
+    <div class="grp"><i>Ferramentas</i></div>
+    <button class="it" id="bt-fil" type="button" title="Filtros (Geral, Por processo e Painel gráfico)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z"/></svg><span class="lg">Filtros</span><span class="ct">Filtros</span><em id="fil-n"></em></button>
+    <div class="esp"></div>
+    <button class="it" id="bt-modo" type="button" title="Como o menu se comporta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6l-1 6 4 3H6l4-3-1-6zM12 13v8"/></svg><span class="lg" id="modo-tx">Menu: abre ao passar o mouse</span></button>
+  </div>
+</nav>
 <div class="palco">
   <div class="vazio" id="vazio">Carregando…</div>
   <iframe id="fr-geral" title="Geral"></iframe>
@@ -188,6 +294,7 @@ table.ls tr.cl{cursor:pointer}table.ls tr.cl:hover{background:#f8fafc}
   <div id="grafico"></div>
   <div id="resumo"></div>
   <div id="premissas"></div>
+</div>
 </div>
 
 <!-- login -->
@@ -374,6 +481,7 @@ function mostra(a){
   if (a==="painel") desenhaPainel();
   if (a==="resumo") desenhaResumo();
   if (a==="premissas") desenhaPremissas();
+  casca();
 }
 /* ---------- aba "Premissas": o texto vem no pacote (atrás do login); o número do dia é calculado aqui ---------- */
 function desenhaPremissas(){
@@ -444,6 +552,42 @@ const CSS_FRAME = `
   .ol-fl input[type=search]{border:1px solid #cbd5e1;border-radius:99px;padding:5px 11px;font-size:12px;width:170px}
   @media (max-width:760px){.ol-fl .lst{position:fixed;left:8px;right:8px;top:auto;bottom:8px;max-height:60vh;max-width:none}}
   tr.ol-tem > td:first-child{box-shadow:inset 4px 0 0 #0f766e}
+  /* casca nova 26/11: o cabeçalho vai para a faixa do site; os filtros, para a gaveta da esquerda */
+  :root{--n:#0e3a52}
+  .wrap > header{display:none!important}
+  .ol-secfil > .st{display:none}
+  .ol-secfil{margin:0!important;padding:0!important}
+  .ol-secfil > .card{padding:0!important;border:0;background:none;box-shadow:none!important;margin:0}
+  .ol-gaveta{display:none!important}
+  html.ol-fdraw .ol-gaveta{display:flex!important;flex-direction:column;flex-wrap:nowrap;gap:0;position:fixed;top:0;left:0;bottom:0;width:300px;z-index:40;background:#fff;border-right:1px solid #e2e8f0;box-shadow:8px 0 28px #08283a1f;overflow:auto;padding:0 14px 28px;animation:olg .22s ease}
+  @keyframes olg{from{transform:translateX(-24px);opacity:0}to{transform:none;opacity:1}}
+  html.ol-fdraw body{padding-left:300px}
+  .ol-gaveta .fgrupo{width:100%;border-bottom:1px solid #eef1f5;padding:11px 0;gap:8px}
+  .ol-gaveta .fgrupo > .lab{cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+  .ol-gaveta .fgrupo > .lab::after{content:"▾";font-size:12px;color:#94a3b8}
+  .ol-gaveta .fgrupo.ol-fech > .lab::after{content:"▸"}
+  .ol-gaveta .fgrupo.ol-fech > :not(.lab){display:none!important}
+  .ol-gaveta .chip{padding:5px 10px}
+  .ol-gaveta .psel{width:100%;max-width:none}
+  .ol-gaveta .limpar{margin:14px 0 0;align-self:flex-start}
+  .ol-gaveta .ol-fl{flex-direction:column;align-items:stretch}
+  .ol-gaveta .ol-fl details{width:100%}
+  .ol-gaveta .ol-fl summary{display:flex;justify-content:space-between;border-radius:9px;padding:7px 11px}
+  .ol-gaveta .ol-fl .lst{position:static!important;box-shadow:none;max-height:220px;min-width:0;max-width:none;margin-top:4px}
+  .ol-gaveta .ol-fl .chip{align-self:flex-start}
+  .ol-gaveta input[type=search]{width:100%!important;border-radius:9px!important;padding:7px 11px!important}
+  .ol-gcab{align-self:stretch;width:100%;position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:13px 0 10px;border-bottom:2px solid #0e3a52;font-weight:700;color:#0e3a52;font-size:14px}
+  .ol-gcab button{border:0;background:#eef4f7;color:#0e3a52;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px}
+  .ol-gcab button:hover{background:#0e3a52;color:#fff}
+  .kpi{transition:transform .18s,box-shadow .18s}
+  .kpi:hover{transform:translateY(-2px);box-shadow:0 10px 22px #08283a1a}
+  .card{transition:box-shadow .2s}
+  .card:hover{box-shadow:0 8px 24px #08283a12}
+  @media (max-width:760px){
+    html.ol-fdraw body{padding-left:0}
+    html.ol-fdraw .ol-gaveta{width:auto;right:0;top:auto;height:80vh;border-radius:18px 18px 0 0;border-right:0;box-shadow:0 -12px 40px #08283a55}
+    @keyframes olg{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+  }
   .ol-res{display:block;margin-top:5px;font-size:11.5px;color:#0f766e;background:#ecfdf5;border-radius:6px;padding:4px 7px;white-space:pre-wrap}
   /* celular, 23/11 */
   @media (max-width:760px){
@@ -484,6 +628,8 @@ function realca(fr){
   });
   ligaFiltros(fr);
   marcaFrame(fr);
+  gavetaFrame(fr);
+  casca();
 }
 /* Filtros do Painel gráfico que os reports não têm (25/11/2026). O report chama window.olPassa(at) para cada linha
    (gancho do gerador); a situação vem da foto do Monday, a justificativa é a mais nova (site ou Monday).
@@ -887,13 +1033,14 @@ function esqueletoPainel(){
   const ops = l => l.map(k => `<option value="${k}">${esc(DIM[k])}</option>`).join("");
   const sel = (c, l, r) => `<select data-c="${c}" aria-label="${r}">${l}</select>`;
   $("#grafico").innerHTML = `
-  <div class="barra"><div class="fl">
-    ${FILTROS.map(d => `<details class="dd" data-d="${d}"><summary>${esc(DIM[d])}</summary><div class="lst"></div></details>${d==="pessoa" ? `<span class="small">como</span>` + PAPEIS.map(([k,r]) => `<button class="tg" type="button" data-papel="${k}">${r}</button>`).join("") : ""}`).join("")}
+  <div class="barra"><div class="fl"><div class="gcab"><span>Filtros</span><button class="x" type="button" data-fecha-fil title="Fechar os filtros">✕</button></div>
+    ${FILTROS.map(d => `<details class="dd" data-d="${d}"><summary>${esc(DIM[d])}</summary><div class="lst"></div></details>${d==="pessoa" ? `<div class="papeis"><span class="small">como</span>` + PAPEIS.map(([k,r]) => `<button class="tg" type="button" data-papel="${k}">${r}</button>`).join("") + `</div>` : ""}`).join("")}
     <input id="gr-txt" type="search" placeholder="Buscar ID ou texto" aria-label="Buscar ID ou texto">
     <button class="tg" type="button" id="gr-ab">Só abertas</button>
     <button class="sec" type="button" id="gr-limpa" style="padding:4px 12px;font-size:12.5px">Limpar tudo</button>
-  </div><div id="gr-chips"></div><div id="gr-vivo"></div></div>
+  </div></div>
   <div id="gr-corpo">
+    <div id="gr-faixa"><div id="gr-chips"></div><div id="gr-vivo"></div></div>
     <div class="gk" id="gr-kpi"></div>
     <div class="gg">
       <div class="card c4"><div class="cab"><h3>Situação</h3></div><div data-g="b-sit"></div></div>
@@ -1324,6 +1471,75 @@ async function montaPPT(){
 
   await p.writeFile({ fileName: "painel-executivo-logistica-" + pac.ref + ".pptx" });
 }
+
+
+/* ---------- casca nova (26/11/2026): menu lateral, gaveta de filtros e faixa do topo ----------
+   Não mexe em número nenhum: só lê o que as abas já mostram e liga/desliga classes. */
+const NOME_ABA = { geral:"Geral", processo:"Por processo", painel:"Painel gráfico", resumo:"Lançamentos do dia e PPT", premissas:"Premissas" };
+const MODOS = { auto:"Menu: abre ao passar o mouse", aberta:"Menu: fixo aberto", fechada:"Menu: fixo fechado" };
+const lsGet = (k, d) => { try{ const v = localStorage.getItem(k); return v == null ? d : v; }catch(e){ return d; } };
+const lsSet = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
+let MODO = lsGet("logistica-menu", "auto"); if (!MODOS[MODO]) MODO = "auto";
+let GAV = lsGet("logistica-filtros", "0") === "1";
+function poeModo(m){
+  MODO = m; lsSet("logistica-menu", m);
+  document.body.classList.remove("lado-auto","lado-aberta","lado-fechada"); document.body.classList.add("lado-" + m);
+  $("#modo-tx").textContent = MODOS[m];
+}
+$("#bt-modo").onclick = () => poeModo(MODO === "auto" ? "aberta" : MODO === "aberta" ? "fechada" : "auto");
+const comFiltro = a => a === "geral" || a === "processo" || a === "painel";
+function mudaGaveta(on){ GAV = !!on; lsSet("logistica-filtros", GAV ? "1" : "0"); gavetas(); }
+$("#bt-fil").onclick = () => { if (comFiltro(abaAtual)) mudaGaveta(!GAV); };
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest("[data-fecha-fil]")) mudaGaveta(false); });
+function gavetas(){
+  document.body.classList.toggle("fil-on", GAV);
+  frames().forEach(gavetaFrame);
+  $("#bt-fil").classList.toggle("aceso", GAV && comFiltro(abaAtual));
+}
+function gavetaFrame(fr){
+  const doc = fr.contentDocument; if (!doc || !doc.documentElement) return;
+  const fl = doc.querySelector(".filtros");
+  if (fl && !fl.classList.contains("ol-gaveta")){
+    fl.classList.add("ol-gaveta");
+    const sec = fl.closest("section"), h = sec && sec.querySelector(":scope > .st h2");
+    if (h && /^\s*filtros\s*$/i.test(h.textContent)) sec.classList.add("ol-secfil");
+    const cab = doc.createElement("div"); cab.className = "ol-gcab";
+    cab.innerHTML = '<span>Filtros</span><button type="button" title="Fechar os filtros">✕</button>';
+    cab.querySelector("button").onclick = () => mudaGaveta(false);
+    fl.insertBefore(cab, fl.firstChild);
+    fl.querySelectorAll(":scope > .fgrupo > .lab").forEach(l => l.addEventListener("click", () => l.parentNode.classList.toggle("ol-fech")));
+    const conta = () => setTimeout(contaFiltros, 0);
+    doc.addEventListener("click", conta, true); doc.addEventListener("change", conta, true); doc.addEventListener("input", conta, true);
+  }
+  doc.documentElement.classList.toggle("ol-fdraw", GAV);
+}
+function contaFiltros(){
+  let n = 0;
+  if (abaAtual === "painel" && typeof G !== "undefined"){
+    n = Object.values(G.f).filter(s => s && s.size).length + (G.txt ? 1 : 0) + (G.abertas ? 1 : 0);
+  } else if (abaAtual === "geral" || abaAtual === "processo"){
+    const doc = $("#fr-" + abaAtual).contentDocument;
+    if (doc) n = doc.querySelectorAll('.filtros .fchips .chip.on:not([data-g="papel"]), .filtros .pchips > *').length;
+    n += Object.values(X.f).filter(s => s && s.size).length + (X.txt ? 1 : 0) + (X.abertas ? 1 : 0);
+  }
+  const e = $("#fil-n"); e.textContent = n > 9 ? "9+" : String(n); e.classList.toggle("tem", n > 0 && comFiltro(abaAtual));
+}
+function metaTopo(){
+  const fr = $(abaAtual === "processo" ? "#fr-processo" : "#fr-geral"), doc = fr.contentDocument;
+  const ps = doc ? [...doc.querySelectorAll(".wrap > header .meta .pill")].map(e => e.textContent.trim()).filter(t => t && !/^export lido/i.test(t)) : [];
+  $("#p-meta").innerHTML = ps.map(t => `<span>${esc(t)}</span>`).join("");
+  const sub = doc && doc.querySelector(".wrap > header .subt");
+  $("#t-pag").title = sub ? sub.textContent.trim() : "";
+}
+function casca(){
+  $("#t-pag").textContent = NOME_ABA[abaAtual] || "";
+  $("#bt-fil").disabled = !comFiltro(abaAtual);
+  $("#bt-fil").title = comFiltro(abaAtual) ? "Filtros" : "Os filtros valem para Geral, Por processo e Painel gráfico";
+  metaTopo(); gavetas(); contaFiltros();
+}
+document.addEventListener("click", () => { if (abaAtual === "painel") setTimeout(contaFiltros, 0); });
+document.addEventListener("input", () => { if (abaAtual === "painel") setTimeout(contaFiltros, 0); });
+poeModo(MODO); casca();
 
 /* ---------- modo local (teste no computador) ---------- */
 async function iniciaLocal(){
